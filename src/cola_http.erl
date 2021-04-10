@@ -15,7 +15,7 @@ start() ->
   ]),
 
   {ok, _} = cowboy:start_tls(?HTTP_LISTENER,
-    [ {port, 8443}
+    [ {port, https_port()}
     , {certfile, filename:join(code:priv_dir("cola"),"server.crt")}
     , {keyfile, filename:join(code:priv_dir("cola"),"server.key")}
     , {verify, verify_peer}
@@ -26,3 +26,9 @@ start() ->
 
 stop() ->
   cowboy:stop_listener(?HTTP_LISTENER).
+
+https_port() ->
+  case application:get_env(https_port) of
+    {ok, Value} -> Value;
+    undefined   -> 8443
+  end.
