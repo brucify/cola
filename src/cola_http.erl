@@ -15,14 +15,13 @@ start() ->
   ]),
 
   {ok, _} = cowboy:start_tls(?HTTP_LISTENER,
-    [ {port, https_port()}
-    , {certfile, filename:join(code:priv_dir("cola"),"server.crt")}
-    , {keyfile, filename:join(code:priv_dir("cola"),"server.key")}
-    , {verify, verify_peer}
-    , {cacertfile, filename:join(code:priv_dir("cola"),"server.crt")} % here we trust ourselves as CA
-    ],
-    #{env => #{dispatch => Dispatch}}
-  ).
+                             [ {port,        https_port()}
+                             , {certfile,    server_certfile()}
+                             , {keyfile,     server_keyfile()}
+                             , {verify,      verify_peer}
+                             , {cacertfile,  server_certfile()} % here we trust ourselves as CA
+                             ],
+                             #{env => #{dispatch => Dispatch}}).
 
 stop() ->
   cowboy:stop_listener(?HTTP_LISTENER).
@@ -32,3 +31,9 @@ https_port() ->
     {ok, Value} -> Value;
     undefined   -> 8443
   end.
+
+server_certfile() ->
+  filename:join(code:priv_dir("cola"),"server.crt").
+
+server_keyfile() ->
+  filename:join(code:priv_dir("cola"),"server.key").

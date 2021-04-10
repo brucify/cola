@@ -1,0 +1,13 @@
+curl --request POST \
+     --url     $HOST/bookings \
+     --cert    pepsi.crt \
+     --key     pepsi.key \
+     --header  'Content-Type: application/json' \
+     --verbose \
+     --insecure \
+     -d @- \
+<< EOF
+{
+  "hello": "world"
+}
+EOF
