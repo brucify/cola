@@ -38,12 +38,12 @@ allowed_methods(Req, #state{allowed_methods = AllowedMethods}=State) ->
 
 
 is_authorized(Req, State) ->
-  case cowboy_req:cert(Req) of
-    undefined ->
-      {{false, <<"Basic realm=\"cola\"">>}, Req, State};
-    CertDer ->
-      cola_authorization:check_cert(CertDer),
-      {true, Req, State}
+  case cola_authorization:check_cert(cowboy_req:cert(Req)) of
+    {true, Client} ->
+      io:format(user, "Client: ~p~n", [Client]),
+      {true, Req, State#state{client = Client}};
+    _ ->
+      {{false, <<"Basic realm=\"cola\"">>}, Req, State}
   end.
 
 %%

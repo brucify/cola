@@ -14,8 +14,24 @@
 
 -include_lib("public_key/include/OTP-PUB-KEY.hrl").
 
+-spec check_cert(CertDer) -> Result
+  when CertDer :: public_key:der_encoded() | undefined,
+       Result  :: {true, Client::string()} | false.
+check_cert(undefined) ->
+  false;
 check_cert(CertDer) ->
   Cert = public_key:der_decode('Certificate', CertDer),
-  PubKey = Cert#'Certificate'.tbsCertificate#'TBSCertificate'.subjectPublicKeyInfo#'SubjectPublicKeyInfo'.subjectPublicKey,
-  Hash = base64:encode(crypto:hash(sha256, PubKey)),
-  io:format(user, "Hash: ~p~n", [Hash]).
+  PubKey = public_key(Cert),
+  Hash = unicode:characters_to_list(base64:encode(crypto:hash(sha256, PubKey))),
+  io:format(user, "Hash: ~p~n", [Hash]),
+  case lists:keyfind(Hash, 1, client_certs()) of
+    {_, Client} -> {true, Client};
+    false       -> false
+  end.
+
+public_key(Cert) ->
+  Cert#'Certificate'.tbsCertificate#'TBSCertificate'.subjectPublicKeyInfo#'SubjectPublicKeyInfo'.subjectPublicKey.
+
+client_certs() ->
+  {ok, Certs} = application:get_env(cola, client_certs),
+  Certs.
