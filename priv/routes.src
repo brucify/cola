@@ -1,0 +1,2 @@
+{"/", cola_handler, []}.
+{"/hello", default_handler, [cola_controller, ['GET', 'POST', 'PUT']]}.
