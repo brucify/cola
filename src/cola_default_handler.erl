@@ -17,12 +17,7 @@
         , handle_post/2
         ]).
 
--record(state, { controller_module    :: atom()
-               , allowed_methods      :: [atom()]
-               , request_params = []  :: [{atom(), any()}]
-               , request_body         :: binary()
-               , client               :: string()
-               }).
+-include("cola_default_handler.hrl").
 
 %%%===================================================================
 %%% Cowboy REST callbacks

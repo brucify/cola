@@ -12,9 +12,35 @@
 -export([ init/0
         , insert_new/3
         , lookup/1
+        , all_rooms/0
+        , all_rooms/1
         ]).
 
 -type booking() :: map().
+
+-define(OWNERSHIP,
+  [ {<<"C01">>, coke}
+  , {<<"C02">>, coke}
+  , {<<"C03">>, coke}
+  , {<<"C04">>, coke}
+  , {<<"C05">>, coke}
+  , {<<"C06">>, coke}
+  , {<<"C07">>, coke}
+  , {<<"C08">>, coke}
+  , {<<"C09">>, coke}
+  , {<<"C10">>, coke}
+  , {<<"P01">>, pepsi}
+  , {<<"P02">>, pepsi}
+  , {<<"P03">>, pepsi}
+  , {<<"P04">>, pepsi}
+  , {<<"P05">>, pepsi}
+  , {<<"P06">>, pepsi}
+  , {<<"P07">>, pepsi}
+  , {<<"P08">>, pepsi}
+  , {<<"P09">>, pepsi}
+  , {<<"P10">>, pepsi}
+  ]
+).
 
 %%%===================================================================
 %%% API
@@ -51,6 +77,17 @@ lookup(Room) ->
     []                 -> [];
     [{Room, Bookings}] -> Bookings
   end.
+
+-spec all_rooms() -> Result
+  when Result :: [binary()].
+all_rooms() ->
+  [Room || {Room, _Owner} <- ?OWNERSHIP].
+
+-spec all_rooms(Owner) -> Result
+  when Owner  :: coke | pepsi,
+       Result :: [binary()].
+all_rooms(Client) ->
+  [Room || {Room, Owner} <- ?OWNERSHIP, Owner =:= Client].
 
 %%%===================================================================
 %%% Internal functions
