@@ -1,3 +1,4 @@
 {"/ping",           cola_ping_handler,    []}.
-{"/bookings",       cola_default_handler, [cola_controller_bookings,    ['GET', 'POST']]}.
+{"/bookings",       cola_default_handler, [cola_controller_bookings,    ['POST']]}.
 {"/bookings/:id",   cola_default_handler, [cola_controller_bookings_id, ['GET', 'POST', 'DELETE']]}.
+{"/rooms",          cola_default_handler, [cola_controller_rooms,       ['GET']]}.

@@ -192,7 +192,9 @@ method_to_fun(<<"PUT">>)    -> put;
 method_to_fun(<<"DELETE">>) -> delete.
 
 atomize_keys(PropList) ->
-  [{binary_to_existing_atom(K, latin1), V} || {K, V} <- PropList].
+  lists:map(fun({K, V}) when is_atom(K) -> {K, V};
+               ({K, V})                 -> {binary_to_existing_atom(K, latin1), V}
+            end, PropList).
 
 read_body(Req0) ->
   case read_body(Req0, <<>>) of

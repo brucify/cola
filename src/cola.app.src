@@ -4,9 +4,10 @@
   {registered, []},
   {mod, {cola_app, []}},
   {applications,
-   [kernel,
-    stdlib,
-    cowboy
+   [ kernel
+   , stdlib
+   , cowboy
+   , cowboy_swagger
    ]},
   {env,[]},
   {modules, []},
