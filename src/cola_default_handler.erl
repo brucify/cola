@@ -1,10 +1,11 @@
--module(default_handler).
+-module(cola_default_handler).
 
 -behavior(cowboy_rest).
 
 %% cowboy callbacks
 -export([ init/2
         , allowed_methods/2
+        , is_authorized/2
         , content_types_provided/2
         , content_types_accepted/2
         , delete_resource/2
@@ -16,10 +17,11 @@
         , handle_post/2
         ]).
 
--record(state, { controller_module :: atom()
-               , allowed_methods :: [atom()]
-               , request_params = [] :: [{atom(), any()}]
-               , request_body :: binary()
+-record(state, { controller_module    :: atom()
+               , allowed_methods      :: [atom()]
+               , request_params = []  :: [{atom(), any()}]
+               , request_body         :: binary()
+               , client               :: string()
                }).
 
 %%%===================================================================
@@ -33,6 +35,16 @@ init(Req, [ControllerModule, AllowedMethods]) ->
 
 allowed_methods(Req, #state{allowed_methods = AllowedMethods}=State) ->
   {get_allowed_methods(AllowedMethods), Req, State}.
+
+
+is_authorized(Req, State) ->
+  case cowboy_req:cert(Req) of
+    undefined ->
+      {{false, <<"Basic realm=\"cola\"">>}, Req, State};
+    CertDer ->
+      cola_authorization:check_cert(CertDer),
+      {true, Req, State}
+  end.
 
 %%
 %% GET and HEAD methods
