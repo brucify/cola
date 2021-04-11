@@ -29,25 +29,33 @@ swagger_doc_post() ->
         }
    }.
 post(Params, #state{client = Client}) ->
-  Room      = cola_conversion:to_list(proplists:get_value(room,       Params)),
-  StartTime = cola_conversion:to_list(proplists:get_value(start_time, Params)),
-  EndTime   = cola_conversion:to_list(proplists:get_value(end_time,   Params)),
-  case check_time([StartTime, EndTime]) of
+  Room0      = cola_conversion:to_list(proplists:get_value(room,       Params)),
+  StartTime0 = cola_conversion:to_list(proplists:get_value(start_time, Params)),
+  EndTime0   = cola_conversion:to_list(proplists:get_value(end_time,   Params)),
+  case check_time([StartTime0, EndTime0]) of
     false ->
       {400, <<"Bad request">>, #{}};
     true ->
-      Created = case cola_bookings:is_free(Room, StartTime, EndTime, Client) of
-                  true  -> cola_bookings:insert_new(Room, StartTime, EndTime, Client);
+      Created = case cola_bookings:is_free(Room0, StartTime0, EndTime0, Client) of
+                  true  -> cola_bookings:insert_new(Room0, StartTime0, EndTime0, Client);
                   false -> false
                 end,
       Result = case Created of
-                 {true, Id} -> #{ created          => true
-                                , room             => cola_conversion:to_binary(Room)
-                                , start_time       => cola_conversion:to_binary(StartTime)
-                                , end_time         => cola_conversion:to_binary(EndTime)
-                                , booking_id       => cola_conversion:to_binary(Id)
-                                };
-                 false      -> #{ created          => false }
+                 {true, Id0} ->
+                   Room      = cola_conversion:to_binary(Room0),
+                   StartTime = cola_conversion:to_binary(StartTime0),
+                   EndTime   = cola_conversion:to_binary(EndTime0),
+                   Id        = cola_conversion:to_binary(Id0),
+                   Sig = cola_crypto_worker:sign(<<Room/binary, StartTime/binary, EndTime/binary, Id/binary>>),
+                   #{ created          => true
+                    , room             => Room
+                    , start_time       => StartTime
+                    , end_time         => EndTime
+                    , booking_id       => Id
+                    , signature        => base64:encode(Sig)
+                    };
+                 false      ->
+                   #{ created          => false }
                end,
       {continue, Result}
   end.
@@ -79,6 +87,10 @@ trails() ->
      , start_time => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
      , end_time   => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
      , created    => #{ type => "boolean", required => "true"}
+     , signature  => #{ type => "string", required => "false"
+                      , example => "MEYCIQDQ8WNIH2wkiArOz75/Y3YE1hmIDejQQhymHcDICf4o+wIhALEMQJ4/v/qwhDuW2kfgkFLLabncw5jZjGJ/W7LC7PkR"
+                      , description => "A valid ECDSA signature (ecdsa-with-SHA256 1.2.840.10045.4.3.2) of the concatenated values of the room, start_time, end_time, and id keys. Base64 encoded as a string."
+                      }
      }
   ),
   Metadata = #{ post => swagger_doc_post()
