@@ -10,6 +10,10 @@
 
 -include("cola_default_handler.hrl").
 
+%%%===================================================================
+%%% API
+%%%===================================================================
+
 swagger_doc_get() ->
   #{ tags => ["rooms"]
    , description => "Gets meeting rooms availability"
@@ -22,10 +26,16 @@ swagger_doc_get() ->
    }.
 get(_Params, #state{client=Client}) ->
   Rooms = cola_bookings:all_rooms(Client),
-  Bookings = lists:map(fun(Room) -> #{ name     => Room
-                                     , occupied => cola_bookings:lookup(Room)
-                                     }
-                       end, Rooms),
+  Result = lists:map(
+    fun(Room) ->
+      Bookings = cola_bookings:lookup(Room),
+      Occupied = [#{ start_time => StartTime, end_time => EndTime} || {_R, StartTime, EndTime} <- Bookings],
+      #{ name     => Room
+       , occupied => Occupied
+       }
+    end,
+    Rooms
+  ),
 %%  Result =
 %%    [ #{ name => <<"C01">>
 %%       , occupied =>
@@ -48,7 +58,11 @@ get(_Params, #state{client=Client}) ->
 %%       , occupied => []
 %%       }
 %%    ],
-  {continue, Bookings}.
+  {continue, Result}.
+
+%%%===================================================================
+%%% Swagger hook
+%%%===================================================================
 
 trails() ->
   ok = cowboy_swagger:add_definition_array(<<"all_rooms">>,
@@ -65,3 +79,7 @@ trails() ->
               },
   {Path, Handler, Params} = lists:keyfind("/rooms", 1, cola_http:routes()),
   [trails:trail(Path, Handler, Params, Metadata)].
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================

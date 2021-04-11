@@ -8,6 +8,10 @@
 
 -define(HTTP_LISTENER, my_http_listener).
 
+%%%===================================================================
+%%% API
+%%%===================================================================
+
 start() ->
   Dispatch = compile_swagger_dispatch(),
   {ok, _} = cowboy:start_tls(?HTTP_LISTENER,
@@ -25,6 +29,10 @@ stop() ->
 routes() ->
   {ok, Routes} = file:consult(filename:join(code:priv_dir("cola"),"routes.src")),
   Routes.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
 
 https_port() ->
   case application:get_env(https_port) of

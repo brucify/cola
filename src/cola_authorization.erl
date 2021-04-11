@@ -14,6 +14,10 @@
 
 -include_lib("public_key/include/OTP-PUB-KEY.hrl").
 
+%%%===================================================================
+%%% API
+%%%===================================================================
+
 -spec check_cert(CertDer) -> Result
   when CertDer :: public_key:der_encoded() | undefined,
        Result  :: {true, Client::string()} | false.
@@ -28,6 +32,10 @@ check_cert(CertDer) ->
     {_, Client} -> {true, Client};
     false       -> false
   end.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
 
 public_key(Cert) ->
   Cert#'Certificate'.tbsCertificate#'TBSCertificate'.subjectPublicKeyInfo#'SubjectPublicKeyInfo'.subjectPublicKey.

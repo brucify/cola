@@ -17,6 +17,8 @@
         , handle_post/2
         ]).
 
+-export([ request_schema_name/2 ]).
+
 -include("cola_default_handler.hrl").
 
 %%%===================================================================
@@ -96,6 +98,17 @@ handle_post(#{path:=_Path}=Req, State)->
 
 
 %%%===================================================================
+%%% API
+%%%===================================================================
+
+-spec request_schema_name(Module, Method) -> Name
+  when Module :: atom(),
+       Method :: binary(),
+       Name   :: binary().
+request_schema_name(Module, Method) ->
+  <<(atom_to_binary(Module,latin1))/binary, "_", Method/binary, "_request">>.
+
+%%%===================================================================
 %%% Steps
 %%%===================================================================
 
@@ -103,7 +116,7 @@ call_controller(#{method := Method}= Req0, #state{ controller_module = Controlle
                                                  , request_params = ReqParams
                                                  , request_body = Body
                                                  }=State) ->
-  Fun = method_to_fun(Method),
+  Fun = method_to_atom(Method),
   Params = maybe_add_plain_text_body(Body, ReqParams, Req0),
 
   try Controller:Fun(Params, State) of
@@ -126,7 +139,10 @@ call_controller(#{method := Method}= Req0, #state{ controller_module = Controlle
       {stop, Req1, State}
   end.
 
-type_check_params(Req, #state{request_params = Params}=State) ->
+type_check_params(#{method:=_Method}=Req, #state{ controller_module=_Mod
+                                               , raw_request_body=_Json
+                                               , request_params = Params
+                                               }=State) ->
   {continue, Req, State#state{request_params = Params}}.
 
 parse_body_params(#{}=Req0, #state{request_params = Params}=State) ->
@@ -137,9 +153,9 @@ parse_body_params(#{}=Req0, #state{request_params = Params}=State) ->
       {stop, Req2, State};
     {ok, DecodedBody} when is_map(DecodedBody) ->
       BodyParams = atomize_keys(maps:to_list(DecodedBody)),
-      {continue, Req0, State#state{request_params = BodyParams++Params}};
+      {continue, Req0, State#state{request_params = BodyParams++Params, raw_request_body = BodyBin}};
     {ok, DecodedBody} ->
-      {continue, Req0, State#state{request_body = DecodedBody}}
+      {continue, Req0, State#state{request_body = DecodedBody, raw_request_body = BodyBin}}
   end.
 
 parse_path_params(#{bindings := Bindings}=Req0, #state{request_params = Params}=State) ->
@@ -181,10 +197,10 @@ get_allowed_methods(Atoms) ->
             end,
     Atoms).
 
-method_to_fun(<<"GET">>)    -> get;
-method_to_fun(<<"POST">>)   -> post;
-method_to_fun(<<"PUT">>)    -> put;
-method_to_fun(<<"DELETE">>) -> delete.
+method_to_atom(<<"GET">>)    -> get;
+method_to_atom(<<"POST">>)   -> post;
+method_to_atom(<<"PUT">>)    -> put;
+method_to_atom(<<"DELETE">>) -> delete.
 
 atomize_keys(PropList) ->
   lists:map(fun({K, V}) when is_atom(K) -> {K, V};

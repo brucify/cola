@@ -10,6 +10,10 @@
 
 -behaviour(trails_handler).
 
+%%%===================================================================
+%%% API
+%%%===================================================================
+
 swagger_doc_get() ->
   #{ tags => ["bookings"]
    , description => "Gets all bookings"
@@ -77,6 +81,10 @@ delete(_Params, _State) ->
   {continue, Result}.
 
 
+%%%===================================================================
+%%% Swagger hook
+%%%===================================================================
+
 trails() ->
   Metadata = #{ get => swagger_doc_get()
               , post => swagger_doc_post()
@@ -84,3 +92,7 @@ trails() ->
               },
   {Path, Handler, Params} = lists:keyfind("/bookings/:id", 1, cola_http:routes()),
   [trails:trail(Path, Handler, Params, Metadata)].
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================

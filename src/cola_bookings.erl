@@ -11,12 +11,15 @@
 %% API
 -export([ init/0
         , insert_new/3
+        , insert_new/4
+        , is_free/3
         , lookup/1
         , all_rooms/0
         , all_rooms/1
         ]).
 
--type booking() :: map().
+-type booking() :: {Room::binary(), StartTime::binary(), EndTime::binary()}.
+-type client()  :: coke | pepsi.
 
 -define(OWNERSHIP,
   [ {<<"C01">>, coke}
@@ -51,23 +54,41 @@ init() ->
   init_rooms(),
   ok.
 
+-spec insert_new(Client, Room, StartTime, EndTime) -> Result
+  when Client    :: client(),
+  Room      :: binary(),
+  StartTime :: binary(),
+  EndTime   :: binary(),
+  Result    :: boolean().
+insert_new(Client, Room, StartTime, EndTime) ->
+  case proplists:get_value(Room, ?OWNERSHIP) of
+    Client -> insert_new(Room, StartTime, EndTime);
+    _      -> false
+  end.
+
 -spec insert_new(Room, StartTime, EndTime) -> Result
   when Room      :: binary(),
        StartTime :: binary(),
        EndTime   :: binary(),
        Result    :: boolean().
-insert_new(Room, StartTime, EndTime) ->
+insert_new(Room, StartTime0, EndTime0) ->
   case ets:member(?MODULE, Room) of
     false -> false;
     true ->
       Bookings0 = lookup(Room),
-      Bookings1 = [ #{ start_time => StartTime
-                     , end_time => EndTime
-                     }
-                  | Bookings0
-                  ],
+      StartTime1 = calendar:rfc3339_to_system_time(to_list(StartTime0)),
+      EndTime1   = calendar:rfc3339_to_system_time(to_list(EndTime0)),
+      Bookings1 = [ {Room, StartTime1, EndTime1} | Bookings0],
       ets:update_element(?MODULE, Room, {2, Bookings1})
   end.
+
+-spec is_free(Room, StartTime, EndTime) -> Result
+  when Room      :: binary(),
+       StartTime :: binary(),
+       EndTime   :: binary(),
+       Result    :: boolean().
+is_free(Room, StartTime, EndTime) ->
+  true.
 
 -spec lookup(Room) -> Bookings
   when Room     :: binary(),
@@ -75,7 +96,12 @@ insert_new(Room, StartTime, EndTime) ->
 lookup(Room) ->
   case ets:lookup(?MODULE, Room) of
     []                 -> [];
-    [{Room, Bookings}] -> Bookings
+    [{Room, Bookings}] -> [ { Room
+                            , unicode:characters_to_binary(to_rfc3339(Start))
+                            , unicode:characters_to_binary(to_rfc3339(End))
+                            }
+                          || {Room, Start, End} <- Bookings
+                          ]
   end.
 
 -spec all_rooms() -> Result
@@ -84,7 +110,7 @@ all_rooms() ->
   [Room || {Room, _Owner} <- ?OWNERSHIP].
 
 -spec all_rooms(Owner) -> Result
-  when Owner  :: coke | pepsi,
+  when Owner  :: client(),
        Result :: [binary()].
 all_rooms(Client) ->
   [Room || {Room, Owner} <- ?OWNERSHIP, Owner =:= Client].
@@ -114,3 +140,10 @@ init_rooms() ->
   ets:insert_new(?MODULE, {<<"P08">>, []}),
   ets:insert_new(?MODULE, {<<"P09">>, []}),
   ets:insert_new(?MODULE, {<<"P10">>, []}).
+
+%% "2021-04-10T21:15:31Z"
+to_rfc3339(Time) ->
+  calendar:system_time_to_rfc3339(Time, [{unit, second}, {time_designator, $T}, {offset, "Z"}]).
+
+to_list(Value) ->
+  unicode:characters_to_list(Value).

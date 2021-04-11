@@ -2,5 +2,6 @@
                 , allowed_methods      :: [atom()]
                 , request_params = []  :: [{atom(), any()}]
                 , request_body         :: binary()
+                , raw_request_body     :: binary()
                 , client               :: atom()
                 }).
