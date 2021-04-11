@@ -10,6 +10,7 @@
 -export([start/2, stop/1]).
 
 start(_StartType, _StartArgs) ->
+  cola_permission_sup:start_link(),
   cola_bookings:init(),
   cola_http:start().
 

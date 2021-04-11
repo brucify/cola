@@ -24,9 +24,9 @@
 check_cert(undefined) ->
   false;
 check_cert(CertDer) ->
-  Cert = public_key:der_decode('Certificate', CertDer),
+  Cert   = public_key:der_decode('Certificate', CertDer),
   PubKey = public_key(Cert),
-  Hash = unicode:characters_to_list(base64:encode(crypto:hash(sha256, PubKey))),
+  Hash   = unicode:characters_to_list(base64:encode(crypto:hash(sha256, PubKey))),
   io:format(user, "Hash: ~p~n", [Hash]),
   case lists:keyfind(Hash, 1, client_certs()) of
     {_, Client} -> {true, Client};

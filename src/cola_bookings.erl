@@ -16,7 +16,6 @@
         , lookup_booking/2
         , to_rfc3339/1
         , all_bookings/1
-        , all_rooms/0
         , all_rooms/1
         ]).
 
@@ -78,7 +77,8 @@ init() ->
        Client    :: client(),
        Result    :: {true, Id::string()} | false.
 insert_new(Room, StartTime0, EndTime0, Client) ->
-  case is_allowed(Room, Client) andalso ets:member(?MODULE, Room) of
+  case (is_allowed(Room, Client) orelse is_public_mode())
+    andalso ets:member(?MODULE, Room) of
     false -> false;
     true ->
       Id = cola_uuid:new(),
@@ -97,7 +97,8 @@ insert_new(Room, StartTime0, EndTime0, Client) ->
        Client    :: client(),
        Result    :: boolean().
 is_free(Room, StartTime, EndTime, Client) ->
-  case is_allowed(Room, Client) andalso ets:member(?MODULE, Room) of
+  case (is_allowed(Room, Client) orelse is_public_mode())
+    andalso ets:member(?MODULE, Room) of
     false -> false;
     true ->
       Bookings = lists:keysort(3, lookup_by_room(Room)), % sort by start_time
@@ -138,16 +139,11 @@ all_bookings(Room) ->
     || {BookingId, _, Start, End, Client} <- lookup_by_room(Room)
   ].
 
--spec all_rooms() -> Result
-  when Result :: [string()].
-all_rooms() ->
-  [Room || {Room, _Owner} <- ?OWNERSHIP].
-
 -spec all_rooms(Owner) -> Result
   when Owner  :: client(),
        Result :: [string()].
 all_rooms(Client) ->
-  [Room || {Room, Owner} <- ?OWNERSHIP, Owner =:= Client].
+  [Room || {Room, Owner} <- ?OWNERSHIP, Owner =:= Client orelse is_public_mode()].
 
 %%%===================================================================
 %%% Internal functions
@@ -203,7 +199,7 @@ check_is_free({StartTime0, EndTime0}, Bookings) ->
   EndTime1   = calendar:rfc3339_to_system_time(EndTime0),
   check_is_free({StartTime1, EndTime1}, Bookings, {0, 0}).
 
-check_is_free({NewStart, NewEnd}, _, _) when NewStart >= NewEnd ->
+check_is_free({NewStart, NewEnd}, _,  _) when NewStart >= NewEnd ->
   false;
 check_is_free(_,                  [], {0, 0}) ->
   true;
@@ -226,6 +222,10 @@ is_allowed(Room, Client) ->
     Client -> true;
     _      -> false
   end.
+
+-spec is_public_mode() -> boolean().
+is_public_mode() ->
+  public =:= cola_permission_worker:current_mode().
 
 %% to "2021-04-10T21:15:31Z"
 to_rfc3339(Time) when is_integer(Time) ->
