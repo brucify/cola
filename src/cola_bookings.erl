@@ -13,6 +13,7 @@
         , insert_new/3
         , insert_new/4
         , is_free/3
+        , lookup_booking/2
         , to_rfc3339/1
         , all_bookings/1
         , all_rooms/0
@@ -103,6 +104,20 @@ is_free(Room, StartTime, EndTime) ->
       check_is_free({StartTime, EndTime}, Bookings)
   end.
 
+-spec lookup_booking(Id, Client) -> Booking
+  when Id       :: string(),
+       Client   :: string(),
+       Booking  :: booking() | undefined.
+lookup_booking(Id, Client) ->
+  case lookup(Id) of
+    undefined           -> undefined;
+    {Id,Room,Start,End} ->
+      case proplists:get_value(Room, ?OWNERSHIP) of
+        Client -> {Id, Room, to_rfc3339(Start), to_rfc3339(End)};
+        _      -> undefined
+      end
+  end.
+
 -spec all_bookings(Room) -> Result
   when Room   :: string(),
        Result :: [booking()].
@@ -151,6 +166,15 @@ init_rooms() ->
   ets:insert_new(?MODULE, {"P08", []}),
   ets:insert_new(?MODULE, {"P09", []}),
   ets:insert_new(?MODULE, {"P10", []}).
+
+-spec lookup(Id) -> Booking
+  when Id       :: string(),
+  Booking  :: booking_db_entry() | undefined.
+lookup(Id) ->
+  case ets:lookup(?MODULE, Id) of
+    []                  -> undefined;
+    [{_,_,_,_}=Booking] -> Booking
+  end.
 
 -spec lookup_by_room(Room) -> Bookings
   when Room     :: string(),

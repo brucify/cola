@@ -10,6 +10,8 @@
 
 -behaviour(trails_handler).
 
+-include("cola_default_handler.hrl").
+
 %%%===================================================================
 %%% API
 %%%===================================================================
@@ -29,16 +31,21 @@ swagger_doc_get() ->
    , responses =>
       #{ <<"200">> =>
         #{ description => "200 OK"
-         , content =>
-            #{ 'application/json' =>
-              #{schema => cowboy_swagger:schema(<<"schema_todo">>)
-               }
-             }
+         , content => #{'application/json' =>
+            #{schema => cowboy_swagger:schema(<<"get_bookings_id_response">>)}}
          }
        }
    }.
-get(_Params, _State) ->
-  Result = <<"hello world">>,
+get(Params, #state{client = Client}) ->
+  Id     = cola_conversion:to_list(proplists:get_value(id, Params)),
+  Result = case cola_bookings:lookup_booking(Id, Client) of
+             undefined              -> #{};
+             {Id, Room, Start, End} -> #{ booking_id => cola_conversion:to_binary(Id)
+                                        , room       => cola_conversion:to_binary(Room)
+                                        , start_time => cola_conversion:to_binary(Start)
+                                        , start_end  => cola_conversion:to_binary(End)
+                                        }
+           end,
   {continue, Result}.
 
 swagger_doc_post() ->
@@ -105,6 +112,13 @@ delete(_Params, _State) ->
 %%%===================================================================
 
 trails() ->
+  ok = cowboy_swagger:add_definition(<<"get_bookings_id_response">>,
+    #{ booking_id => #{ type => "string", required => "false", example => "bf6a5633-e503-47a6-babe-de3b2c464b86"}
+     , room       => #{ type => "string", required => "false", example => "C01"}
+     , start_time => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
+     , end_time   => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
+     }
+  ),
   Metadata = #{ get => swagger_doc_get()
               , post => swagger_doc_post()
               , delete => swagger_doc_delete()
