@@ -2,12 +2,18 @@
 [{<<"cowboy">>,{pkg,<<"cowboy">>,<<"2.6.0">>},0},
  {<<"cowboy_swagger">>,{pkg,<<"cowboy_swagger">>,<<"2.2.1">>},0},
  {<<"cowlib">>,{pkg,<<"cowlib">>,<<"2.7.3">>},1},
+ {<<"erlang-uuid">>,
+  {git,"https://github.com/avtobiff/erlang-uuid.git",
+       {ref,"cb02a2039a9b29dd2eef0446039c9c6e164df9ef"}},
+  0},
  {<<"jesse">>,{pkg,<<"jesse">>,<<"1.5.6">>},0},
  {<<"jiffy">>,{pkg,<<"jiffy">>,<<"1.0.1">>},0},
  {<<"jsx">>,{pkg,<<"jsx">>,<<"2.9.0">>},1},
+ {<<"quickrand">>,{pkg,<<"quickrand">>,<<"2.0.1">>},1},
  {<<"ranch">>,{pkg,<<"ranch">>,<<"1.7.1">>},1},
  {<<"rfc3339">>,{pkg,<<"rfc3339">>,<<"0.2.2">>},1},
- {<<"trails">>,{pkg,<<"trails">>,<<"2.1.0">>},1}]}.
+ {<<"trails">>,{pkg,<<"trails">>,<<"2.1.0">>},1},
+ {<<"uuid">>,{pkg,<<"uuid_erl">>,<<"2.0.1">>},0}]}.
 [
 {pkg_hash,[
  {<<"cowboy">>, <<"DC1FF5354C89E36A3E3EF8D10433396DCFF0DCBB1D4223B58C64C2D51A6D88D9">>},
@@ -16,7 +22,9 @@
  {<<"jesse">>, <<"593B8CAD26AF3CC0E44C727BD8CBDE56E2B0DE4C8D2738B1C258B6936A40A6A3">>},
  {<<"jiffy">>, <<"4F25639772CA41202F41BA9C8F6CA0933554283DD4742C90651E03471C55E341">>},
  {<<"jsx">>, <<"D2F6E5F069C00266CAD52FB15D87C428579EA4D7D73A33669E12679E203329DD">>},
+ {<<"quickrand">>, <<"6D861FA11E6EB51BB2343A2616EFF704C2681A9997F41ABC78E58FA76DA33981">>},
  {<<"ranch">>, <<"6B1FAB51B49196860B733A49C07604465A47BDB78AA10C1C16A3D199F7F8C881">>},
  {<<"rfc3339">>, <<"1552DF616ACA368D982E9F085A0E933B6688A3F4938A671798978EC2C0C58730">>},
- {<<"trails">>, <<"D51D7F065F2B692654C611C663BFAC377D47EAFF9D38D0C17ECD031D1A59399A">>}]}
+ {<<"trails">>, <<"D51D7F065F2B692654C611C663BFAC377D47EAFF9D38D0C17ECD031D1A59399A">>},
+ {<<"uuid">>, <<"1FD9079C544D521063897887A1C5B3302DCA98F9BB06AADCDC6FB0663F256797">>}]}
 ].

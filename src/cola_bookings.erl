@@ -23,7 +23,7 @@
 -export([ check_is_free/2 ]).
 -endif.
 
--type booking() :: {Room::binary(), StartTime::binary(), EndTime::binary()}.
+-type booking() :: {Room::binary(), BookingId::binary(), StartTime::binary(), EndTime::binary()}.
 -type client()  :: coke | pepsi.
 
 -define(OWNERSHIP,
@@ -64,7 +64,7 @@ init() ->
   Room      :: binary(),
   StartTime :: binary(),
   EndTime   :: binary(),
-  Result    :: boolean().
+  Result    :: {true, Id::binary()} | false.
 insert_new(Client, Room, StartTime, EndTime) ->
   case proplists:get_value(Room, ?OWNERSHIP) of
     Client -> insert_new(Room, StartTime, EndTime);
@@ -75,14 +75,18 @@ insert_new(Client, Room, StartTime, EndTime) ->
   when Room      :: binary(),
        StartTime :: binary(),
        EndTime   :: binary(),
-       Result    :: boolean().
+       Result    :: {true, Id::binary()} | false.
 insert_new(Room, StartTime0, EndTime0) ->
   case ets:member(?MODULE, Room) of
     false -> false;
     true ->
-      Bookings0 = lookup(Room),
-      Bookings1 = add_one(Room, StartTime0, EndTime0, Bookings0),
-      ets:update_element(?MODULE, Room, {2, Bookings1})
+      Id = unicode:characters_to_binary(cola_uuid:new()),
+      Bookings0 = lookup_by_room(Room),
+      Bookings1 = add_one(Room, Id, StartTime0, EndTime0, Bookings0),
+      case ets:update_element(?MODULE, Room, {2, Bookings1}) of
+        true -> {true, Id};
+        false -> false
+      end
   end.
 
 -spec is_free(Room, StartTime, EndTime) -> Result
@@ -94,7 +98,7 @@ is_free(Room, StartTime, EndTime) ->
   case ets:member(?MODULE, Room) of
     false -> false;
     true ->
-      Bookings = lists:keysort(2, lookup(Room)),
+      Bookings = lists:keysort(2, lookup_by_room(Room)),
       check_is_free({StartTime, EndTime}, Bookings)
   end.
 
@@ -103,10 +107,11 @@ is_free(Room, StartTime, EndTime) ->
        Result :: [booking()].
 all_bookings(Room) ->
   [ { Room
+    , BookingId
     , unicode:characters_to_binary(to_rfc3339(Start))
     , unicode:characters_to_binary(to_rfc3339(End))
     }
-    || {Room, Start, End} <- lookup(Room)
+    || {_, BookingId, Start, End} <- lookup_by_room(Room)
   ].
 
 -spec all_rooms() -> Result
@@ -146,19 +151,19 @@ init_rooms() ->
   ets:insert_new(?MODULE, {<<"P09">>, []}),
   ets:insert_new(?MODULE, {<<"P10">>, []}).
 
--spec lookup(Room) -> Bookings
+-spec lookup_by_room(Room) -> Bookings
   when Room     :: binary(),
-       Bookings :: [{Room::binary(), Start::integer(), End::integer()}].
-lookup(Room) ->
+       Bookings :: [{Room::binary(), Id::binary(), Start::integer(), End::integer()}].
+lookup_by_room(Room) ->
   case ets:lookup(?MODULE, Room) of
     []                 -> [];
     [{Room, Bookings}] -> Bookings
   end.
 
-add_one(Room, StartTime0, EndTime0, Bookings0) ->
+add_one(Room, Id, StartTime0, EndTime0, Bookings0) ->
   StartTime1 = calendar:rfc3339_to_system_time(to_list(StartTime0)),
   EndTime1   = calendar:rfc3339_to_system_time(to_list(EndTime0)),
-  [ {Room, StartTime1, EndTime1} | Bookings0].
+  [ {Room, Id, StartTime1, EndTime1} | Bookings0].
 
 check_is_free({StartTime0, EndTime0}, Bookings) ->
   StartTime1 = calendar:rfc3339_to_system_time(to_list(StartTime0)),
@@ -175,9 +180,9 @@ check_is_free({NewStart, _},      [], {Upper, 0}) ->
   Upper < NewStart;
 check_is_free({NewStart, NewEnd}, [], {Upper, Lower}) ->
   Upper < NewStart andalso NewEnd < Lower;
-check_is_free({NewStart, NewEnd}, [{_, Start, End} | Rest],   {_, Lower}) when Start < NewStart ->
+check_is_free({NewStart, NewEnd}, [{_, _, Start, End} | Rest],   {_, Lower}) when Start < NewStart ->
   check_is_free({NewStart, NewEnd}, Rest, {End, Lower});
-check_is_free({NewStart, NewEnd}, [{_, Start, _End} | _Rest], {Upper, _}) ->
+check_is_free({NewStart, NewEnd}, [{_, _, Start, _End} | _Rest], {Upper, _}) ->
   check_is_free({NewStart, NewEnd}, [], {Upper, Start}).
 
 %% to "2021-04-10T21:15:31Z"

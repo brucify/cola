@@ -67,9 +67,18 @@ post(Params, #state{client = Client}) ->
   Room      = proplists:get_value(room,       Params),
   StartTime = proplists:get_value(start_time, Params),
   EndTime   = proplists:get_value(end_time,   Params),
-  Result = case cola_bookings:is_free(Room, StartTime, EndTime) of
-             true -> cola_bookings:insert_new(Client, Room, StartTime, EndTime);
-             false -> false
+  Created = case cola_bookings:is_free(Room, StartTime, EndTime) of
+              true  -> cola_bookings:insert_new(Client, Room, StartTime, EndTime);
+              false -> false
+            end,
+  Result = case Created of
+             {true, Id} -> #{ created          => true
+                            , room             => Room
+                            , start_time       => StartTime
+                            , end_time         => EndTime
+                            , booking_id       => Id
+                            };
+             false      -> #{ created          => false }
            end,
   {continue, Result}.
 
@@ -95,10 +104,12 @@ trails() ->
      }
   ),
   ok = cowboy_swagger:add_definition(<<"post_bookings_response">>,
-    #{ room       => #{ type => "string", example => "C01"}
-      , start_time => #{ type => "string", example => "2021-04-10T18:24:31Z"}
-      , end_time   => #{ type => "string", example => "2021-04-10T18:24:31Z"}
-    }
+    #{ room       => #{ type => "string", required => "false", example => "C01"}
+     , start_time => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
+     , end_time   => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
+     , booking_id => #{ type => "string",  required => "false"}
+     , created    => #{ type => "boolean", required => "true"}
+     }
   ),
   Metadata = #{ post => swagger_doc_post()
               },

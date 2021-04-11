@@ -29,7 +29,11 @@ get(_Params, #state{client=Client}) ->
   Result = lists:map(
     fun(Room) ->
       Bookings = cola_bookings:all_bookings(Room),
-      Occupied = [#{ start_time => StartTime, end_time => EndTime} || {_R, StartTime, EndTime} <- Bookings],
+      Occupied = [ #{ start_time => StartTime
+                    , end_time   => EndTime
+                    }
+                   || {_, _, StartTime, EndTime} <- Bookings
+                 ],
       #{ name     => Room
        , occupied => Occupied
        }
