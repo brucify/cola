@@ -1,0 +1,7 @@
+curl --request GET \
+     --url     $HOST/bookings/$ID \
+     --cert    pepsi.crt \
+     --key     pepsi.key \
+     --header  'Content-Type: application/json' \
+     --verbose \
+     --insecure

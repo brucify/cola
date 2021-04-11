@@ -11,8 +11,7 @@
 
 start(_StartType, _StartArgs) ->
   cola_bookings:init(),
-  cola_http:start(),
-  cola_sup:start_link().
+  cola_http:start().
 
 stop(_State) ->
   cola_http:stop(),

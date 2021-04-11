@@ -2,7 +2,6 @@
 
 %% API
 -export([ get/2
-        , post/2
         , delete/2
         ]).
 
@@ -18,7 +17,7 @@
 
 swagger_doc_get() ->
   #{ tags => ["bookings"]
-   , description => "Gets all bookings"
+   , description => "Gets a booking by ID"
    , parameters =>
       [ #{ name => "id"
          , in => "path"
@@ -37,49 +36,20 @@ swagger_doc_get() ->
        }
    }.
 get(Params, #state{client = Client}) ->
-  Id     = cola_conversion:to_list(proplists:get_value(id, Params)),
-  Result = case cola_bookings:lookup_booking(Id, Client) of
-             undefined              -> #{};
-             {Id, Room, Start, End} -> #{ booking_id => cola_conversion:to_binary(Id)
+  Id = cola_conversion:to_list(proplists:get_value(id, Params)),
+  case cola_bookings:lookup_booking(Id, Client) of
+    undefined              -> {404, <<>>, #{}};
+    {Id, Room, Start, End} -> Result = #{ booking_id => cola_conversion:to_binary(Id)
                                         , room       => cola_conversion:to_binary(Room)
                                         , start_time => cola_conversion:to_binary(Start)
                                         , start_end  => cola_conversion:to_binary(End)
-                                        }
-           end,
-  {continue, Result}.
-
-swagger_doc_post() ->
-  #{ tags        => ["bookings"]
-   , description => "Updates a booking"
-   , parameters =>
-      [ #{ name => "id"
-         , in => "path"
-         , description => "The booking ID. UUID v4."
-         , required => true
-         , schema => #{ type => string }
-         , example => "226e6fcf-fac8-4f33-81dd-ff4c60351cc1"
-         }
-      ]
-    , requestBody =>
-      #{ description => "Updates a booking"
-       , content =>
-          #{ 'application/json' =>
-              #{ schema => cowboy_swagger:schema(<<"schema_todo">>)
-               }
-           }
-       }
-   , responses =>
-      #{ <<"200">> =>
-          #{ description => "200 OK"}
-       }
-   }.
-post(_Params, _State) ->
-  Result = <<"hello world">>,
-  {continue, Result}.
+                                        },
+                              {continue, Result}
+  end.
 
 swagger_doc_delete() ->
   #{ tags        => ["bookings"]
-   , description => "Deletes a new booking"
+   , description => "Deletes a booking"
    , parameters =>
       [ #{ name => "id"
          , in => "path"
@@ -89,21 +59,20 @@ swagger_doc_delete() ->
          , example => "226e6fcf-fac8-4f33-81dd-ff4c60351cc1"
          }
       ]
-   , requestBody =>
-      #{ description => "Deletes a new booking"
-       , content =>
-          #{ 'application/json' =>
-              #{ schema => cowboy_swagger:schema(<<"schema_todo">>)
-               }
-           }
-       }
    , responses =>
       #{ <<"200">> =>
-          #{ description => "200 OK"}
+          #{ description => "200 OK"
+           , content =>
+              #{ 'application/json' =>
+                 #{schema => cowboy_swagger:schema(<<"delete_bookings_id_response">>)}}
+           }
+       , <<"404">> =>
+          #{ description => "404 Not Found"}
        }
    }.
-delete(_Params, _State) ->
-  Result = <<"hello world">>,
+delete(Params, #state{client = Client}) ->
+  Id     = cola_conversion:to_list(proplists:get_value(id, Params)),
+  Result = #{ result => cola_bookings:delete_booking(Id, Client)},
   {continue, Result}.
 
 
@@ -119,8 +88,11 @@ trails() ->
      , end_time   => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
      }
   ),
+  ok = cowboy_swagger:add_definition(<<"delete_bookings_id_response">>,
+    #{ result     => #{ type => "boolean", required => "true" }
+     }
+  ),
   Metadata = #{ get => swagger_doc_get()
-              , post => swagger_doc_post()
               , delete => swagger_doc_delete()
               },
   {Path, Handler, Params} = lists:keyfind("/bookings/:id", 1, cola_http:routes()),

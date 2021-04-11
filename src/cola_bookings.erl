@@ -13,6 +13,7 @@
         , insert_new/3
         , insert_new/4
         , is_free/3
+        , delete_booking/2
         , lookup_booking/2
         , to_rfc3339/1
         , all_bookings/1
@@ -118,6 +119,19 @@ lookup_booking(Id, Client) ->
       end
   end.
 
+-spec delete_booking(Id, Client) -> true
+  when Id       :: string(),
+       Client   :: string().
+delete_booking(Id, Client) ->
+  case lookup(Id) of
+    undefined     -> true;
+    {Id,Room,_,_} ->
+      case proplists:get_value(Room, ?OWNERSHIP) of
+        Client -> ets:delete(?MODULE, Id);
+        _      -> true
+      end
+  end.
+
 -spec all_bookings(Room) -> Result
   when Room   :: string(),
        Result :: [booking()].
@@ -169,7 +183,7 @@ init_rooms() ->
 
 -spec lookup(Id) -> Booking
   when Id       :: string(),
-  Booking  :: booking_db_entry() | undefined.
+       Booking  :: booking_db_entry() | undefined.
 lookup(Id) ->
   case ets:lookup(?MODULE, Id) of
     []                  -> undefined;

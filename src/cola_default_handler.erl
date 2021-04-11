@@ -15,6 +15,7 @@
 -export([ handle_get/2
         , handle_put/2
         , handle_post/2
+        , handle_delete/2
         ]).
 
 -export([ request_schema_name/2 ]).
@@ -63,10 +64,8 @@ content_types_accepted(#{method:=<<"POST">>}=Req, State) ->
 %%
 %% DELETE method
 %%
-delete_resource(Req0, #state{controller_module = Controller}=State) ->
-  {Status, RespBody, Headers} = Controller:delete(Req0, State),
-  Req1 = do_cowboy_reply(Req0, Status, RespBody, Headers),
-  {stop, Req1, State}.
+delete_resource(Req0, #state{controller_module = _Controller}=State) ->
+  handle_delete(Req0, State).
 
 %%%===================================================================
 %%% Custom Cowboy REST callbacks
@@ -96,6 +95,13 @@ handle_post(#{path:=_Path}=Req, State)->
                          , fun call_controller/2
                          ]).
 
+handle_delete(#{path:=_Path}=Req, State)->
+  fold_steps(Req, State, [ fun parse_path_params/2
+                         , fun parse_query_params/2
+                         , fun parse_body_params/2
+                         , fun type_check_params/2
+                         , fun call_controller/2
+                         ]).
 
 %%%===================================================================
 %%% API
