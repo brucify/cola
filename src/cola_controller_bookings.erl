@@ -64,19 +64,19 @@ swagger_doc_post() ->
         }
    }.
 post(Params, #state{client = Client}) ->
-  Room      = proplists:get_value(room,       Params),
-  StartTime = proplists:get_value(start_time, Params),
-  EndTime   = proplists:get_value(end_time,   Params),
+  Room      = cola_conversion:to_list(proplists:get_value(room,       Params)),
+  StartTime = cola_conversion:to_list(proplists:get_value(start_time, Params)),
+  EndTime   = cola_conversion:to_list(proplists:get_value(end_time,   Params)),
   Created = case cola_bookings:is_free(Room, StartTime, EndTime) of
               true  -> cola_bookings:insert_new(Client, Room, StartTime, EndTime);
               false -> false
             end,
   Result = case Created of
              {true, Id} -> #{ created          => true
-                            , room             => Room
-                            , start_time       => StartTime
-                            , end_time         => EndTime
-                            , booking_id       => Id
+                            , room             => cola_conversion:to_binary(Room)
+                            , start_time       => cola_conversion:to_binary(StartTime)
+                            , end_time         => cola_conversion:to_binary(EndTime)
+                            , booking_id       => cola_conversion:to_binary(Id)
                             };
              false      -> #{ created          => false }
            end,
@@ -107,7 +107,7 @@ trails() ->
     #{ room       => #{ type => "string", required => "false", example => "C01"}
      , start_time => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
      , end_time   => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
-     , booking_id => #{ type => "string",  required => "false"}
+     , booking_id => #{ type => "string", required => "false", example => "bf6a5633-e503-47a6-babe-de3b2c464b86"}
      , created    => #{ type => "boolean", required => "true"}
      }
   ),
