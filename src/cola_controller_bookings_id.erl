@@ -20,9 +20,10 @@ swagger_doc_get() ->
    , parameters =>
       [ #{ name => "id"
          , in => "path"
-         , description => "ID of the booking"
+         , description => "The booking ID. UUID v4."
          , required => true
          , schema => #{ type => string }
+         , example => "226e6fcf-fac8-4f33-81dd-ff4c60351cc1"
          }
       ]
    , responses =>
@@ -43,7 +44,16 @@ get(_Params, _State) ->
 swagger_doc_post() ->
   #{ tags        => ["bookings"]
    , description => "Updates a booking"
-   , requestBody =>
+   , parameters =>
+      [ #{ name => "id"
+         , in => "path"
+         , description => "The booking ID. UUID v4."
+         , required => true
+         , schema => #{ type => string }
+         , example => "226e6fcf-fac8-4f33-81dd-ff4c60351cc1"
+         }
+      ]
+    , requestBody =>
       #{ description => "Updates a booking"
        , content =>
           #{ 'application/json' =>
@@ -63,6 +73,15 @@ post(_Params, _State) ->
 swagger_doc_delete() ->
   #{ tags        => ["bookings"]
    , description => "Deletes a new booking"
+   , parameters =>
+      [ #{ name => "id"
+         , in => "path"
+         , description => "The booking ID. UUID v4."
+         , required => true
+         , schema => #{ type => string }
+         , example => "226e6fcf-fac8-4f33-81dd-ff4c60351cc1"
+         }
+      ]
    , requestBody =>
       #{ description => "Deletes a new booking"
        , content =>

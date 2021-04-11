@@ -23,7 +23,8 @@
 -export([ check_is_free/2 ]).
 -endif.
 
--type booking() :: {Room::string(), BookingId::string(), StartTime::string(), EndTime::string()}.
+-type booking()          :: {BookingId::string(), Room::string(), StartTime::string(), EndTime::string()}.
+-type booking_db_entry() :: {BookingId::string(), Room::string(), StartTime::integer(), EndTime::integer()}.
 -type client()  :: coke | pepsi.
 
 -define(OWNERSHIP,
@@ -81,10 +82,10 @@ insert_new(Room, StartTime0, EndTime0) ->
     false -> false;
     true ->
       Id = cola_uuid:new(),
-      Bookings0 = lookup_by_room(Room),
-      Bookings1 = add_one(Room, Id, StartTime0, EndTime0, Bookings0),
-      case ets:update_element(?MODULE, Room, {2, Bookings1}) of
-        true -> {true, Id};
+      StartTime1 = calendar:rfc3339_to_system_time(StartTime0),
+      EndTime1   = calendar:rfc3339_to_system_time(EndTime0),
+      case ets:insert_new(?MODULE, {Id, Room, StartTime1, EndTime1}) of
+        true  -> {true, Id};
         false -> false
       end
   end.
@@ -106,12 +107,12 @@ is_free(Room, StartTime, EndTime) ->
   when Room   :: string(),
        Result :: [booking()].
 all_bookings(Room) ->
-  [ { Room
-    , BookingId
+  [ { BookingId
+    , Room
     , to_rfc3339(Start)
     , to_rfc3339(End)
     }
-    || {_, BookingId, Start, End} <- lookup_by_room(Room)
+    || {BookingId, _, Start, End} <- lookup_by_room(Room)
   ].
 
 -spec all_rooms() -> Result
@@ -153,18 +154,18 @@ init_rooms() ->
 
 -spec lookup_by_room(Room) -> Bookings
   when Room     :: string(),
-       Bookings :: [{Room::string(), Id::string(), Start::integer(), End::integer()}].
+       Bookings :: [booking_db_entry()].
 lookup_by_room(Room) ->
-  case ets:lookup(?MODULE, Room) of
-    []                 -> [];
-    [{Room, Bookings}] -> Bookings
+  case ets:match_object(?MODULE, {'_', Room, '_', '_'}) of
+    []       -> [];
+    Bookings -> Bookings
   end.
 
-add_one(Room, Id, StartTime0, EndTime0, Bookings0) ->
-  StartTime1 = calendar:rfc3339_to_system_time(StartTime0),
-  EndTime1   = calendar:rfc3339_to_system_time(EndTime0),
-  [ {Room, Id, StartTime1, EndTime1} | Bookings0].
-
+-spec check_is_free({StartTime, EndTime}, Bookings) -> Result
+  when StartTime :: string(),
+       EndTime   :: string(),
+       Bookings  :: [booking_db_entry()],
+       Result    :: boolean().
 check_is_free({StartTime0, EndTime0}, Bookings) ->
   StartTime1 = calendar:rfc3339_to_system_time(StartTime0),
   EndTime1   = calendar:rfc3339_to_system_time(EndTime0),
