@@ -49,4 +49,6 @@ check_is_free_test() ->
   ?assertEqual(false, cola_bookings:check_is_free({"2021-04-12T10:30:38Z", "2021-04-12T11:30:38Z"}, Bookings)),
   %% starts after last booking ends
   ?assertEqual(true,  cola_bookings:check_is_free({"2021-04-13T08:40:38Z", "2021-04-13T09:40:38Z"}, Bookings)),
+  %% more than 60 min
+  ?assertEqual(false, cola_bookings:check_is_free({"2021-04-13T08:40:38Z", "2021-04-13T09:41:38Z"}, Bookings)),
   ok.

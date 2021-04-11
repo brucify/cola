@@ -201,6 +201,8 @@ check_is_free({StartTime0, EndTime0}, Bookings) ->
 
 check_is_free({NewStart, NewEnd}, _,  _) when NewStart >= NewEnd ->
   false;
+check_is_free({NewStart, NewEnd}, _,  _) when NewEnd - NewStart > 3600 ->
+  false;
 check_is_free(_,                  [], {0, 0}) ->
   true;
 check_is_free({_, NewEnd},        [], {0, Lower}) ->
