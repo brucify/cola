@@ -36,8 +36,8 @@ post(Params, #state{client = Client}) ->
     false ->
       {400, <<"Bad request">>, #{}};
     true ->
-      Created = case cola_bookings:is_free(Room, StartTime, EndTime) of
-                  true  -> cola_bookings:insert_new(Client, Room, StartTime, EndTime);
+      Created = case cola_bookings:is_free(Room, StartTime, EndTime, Client) of
+                  true  -> cola_bookings:insert_new(Room, StartTime, EndTime, Client);
                   false -> false
                 end,
       Result = case Created of

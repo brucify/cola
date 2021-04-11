@@ -29,22 +29,24 @@ swagger_doc_get() ->
       ]
    , responses =>
       #{ <<"200">> =>
-        #{ description => "200 OK"
-         , content => #{'application/json' =>
-            #{schema => cowboy_swagger:schema(<<"get_bookings_id_response">>)}}
-         }
+          #{ description => "200 OK"
+           , content => #{'application/json' =>
+              #{schema => cowboy_swagger:schema(<<"get_bookings_id_response">>)}}
+           }
+       , <<"404">> =>
+          #{ description => "404 Not Found"}
        }
    }.
 get(Params, #state{client = Client}) ->
   Id = cola_conversion:to_list(proplists:get_value(id, Params)),
   case cola_bookings:lookup_booking(Id, Client) of
-    undefined              -> {404, <<>>, #{}};
-    {Id, Room, Start, End} -> Result = #{ booking_id => cola_conversion:to_binary(Id)
-                                        , room       => cola_conversion:to_binary(Room)
-                                        , start_time => cola_conversion:to_binary(Start)
-                                        , start_end  => cola_conversion:to_binary(End)
-                                        },
-                              {continue, Result}
+    undefined                      -> {404, <<>>, #{}};
+    {Id, Room, Start, End, Client} -> Result = #{ booking_id => cola_conversion:to_binary(Id)
+                                                , room       => cola_conversion:to_binary(Room)
+                                                , start_time => cola_conversion:to_binary(Start)
+                                                , start_end  => cola_conversion:to_binary(End)
+                                                },
+                                      {continue, Result}
   end.
 
 swagger_doc_delete() ->
@@ -66,8 +68,6 @@ swagger_doc_delete() ->
               #{ 'application/json' =>
                  #{schema => cowboy_swagger:schema(<<"delete_bookings_id_response">>)}}
            }
-       , <<"404">> =>
-          #{ description => "404 Not Found"}
        }
    }.
 delete(Params, #state{client = Client}) ->

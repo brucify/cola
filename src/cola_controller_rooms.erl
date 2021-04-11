@@ -32,7 +32,7 @@ get(_Params, #state{client=Client}) ->
       Occupied = [ #{ start_time => cola_conversion:to_binary(StartTime)
                     , end_time   => cola_conversion:to_binary(EndTime)
                     }
-                   || {_, _, StartTime, EndTime} <- Bookings
+                   || {_, _, StartTime, EndTime, _} <- Bookings
                  ],
       #{ name     => cola_conversion:to_binary(Room)
        , occupied => Occupied
@@ -40,28 +40,6 @@ get(_Params, #state{client=Client}) ->
     end,
     Rooms
   ),
-%%  Result =
-%%    [ #{ name => <<"C01">>
-%%       , occupied =>
-%%          [ #{ start_time => <<"2021-04-10T18:24:31Z">>
-%%             , end_time => <<"2021-04-10T19:24:31Z">>
-%%             }
-%%          ]
-%%       }
-%%    , #{ name => <<"C02">>
-%%       , occupied =>
-%%          [ #{ start_time => <<"2021-04-10T18:24:31Z">>
-%%             , end_time => <<"2021-04-10T19:24:31Z">>
-%%             }
-%%          , #{ start_time => <<"2021-04-10T19:24:31Z">>
-%%             , end_time => <<"2021-04-10T20:24:31Z">>
-%%             }
-%%          ]
-%%       }
-%%    , #{ name => <<"P01">>
-%%       , occupied => []
-%%       }
-%%    ],
   {continue, Result}.
 
 %%%===================================================================
