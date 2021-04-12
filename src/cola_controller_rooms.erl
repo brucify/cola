@@ -48,13 +48,13 @@ get(_Params, #state{client=Client}) ->
 
 trails() ->
   ok = cowboy_swagger:add_definition_array(<<"all_rooms">>,
-    #{ name       => #{type => "string"}
-     , occupied   => cowboy_swagger:schema(<<"occupied_slots">>)
+    #{ <<"name">>       => #{type => "string"}
+     , <<"occupied">>   => cowboy_swagger:schema(<<"occupied_slots">>)
      }
   ),
   ok = cowboy_swagger:add_definition_array(<<"occupied_slots">>,
-    #{ start_time => #{type => "string", example => "2021-04-10T18:24:31Z"}
-     , end_time   => #{type => "string", example => "2021-04-10T18:24:31Z"}
+    #{ <<"start_time">> => #{type => "string", example => "2021-04-10T18:24:31Z"}
+     , <<"end_time">>   => #{type => "string", example => "2021-04-10T18:24:31Z"}
      }
   ),
   Metadata = #{ get => swagger_doc_get()

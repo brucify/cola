@@ -20,7 +20,7 @@
 
 -spec check_cert(CertDer) -> Result
   when CertDer :: public_key:der_encoded() | undefined,
-       Result  :: {true, Client::string()} | false.
+       Result  :: {true, Client::atom()} | false.
 check_cert(undefined) ->
   false;
 check_cert(CertDer) ->
@@ -28,7 +28,7 @@ check_cert(CertDer) ->
   PubKey = public_key(Cert),
   Hash   = unicode:characters_to_list(base64:encode(crypto:hash(sha256, PubKey))),
   io:format(user, "Hash: ~p~n", [Hash]),
-  case lists:keyfind(Hash, 1, client_certs()) of
+  case lists:keyfind(Hash, 1, client_pubkey_hash()) of
     {_, Client} -> {true, Client};
     false       -> false
   end.
@@ -40,6 +40,6 @@ check_cert(CertDer) ->
 public_key(Cert) ->
   Cert#'Certificate'.tbsCertificate#'TBSCertificate'.subjectPublicKeyInfo#'SubjectPublicKeyInfo'.subjectPublicKey.
 
-client_certs() ->
-  {ok, Certs} = application:get_env(cola, client_certs),
+client_pubkey_hash() ->
+  {ok, Certs} = application:get_env(cola, client_pubkey_hash),
   Certs.

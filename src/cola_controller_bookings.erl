@@ -66,31 +66,31 @@ post(Params, #state{client = Client}) ->
 
 trails() ->
   ok = cowboy_swagger:add_definition_array(<<"schema_todo">>,
-    #{ key1 => #{type => "string"}
-     , key2 => #{type => "object"
-     , properties =>
-         #{ key3 => #{ type => "string"}
-          , key4 => #{ type => "string"}
-          }
-    }
+    #{ <<"key1">> => #{type => "string"}
+     , <<"key2">> => #{ type => "object"
+                      , properties =>
+                         #{ <<"key3">> => #{ type => "string"}
+                          , <<"key4">> => #{ type => "string"}
+                          }
+                      }
     }
   ),
   ok = cowboy_swagger:add_definition(<<"post_bookings_request">>,
-    #{ room       => #{ type => "string", example => "C01"}
-     , start_time => #{ type => "string", example => "2021-04-10T18:24:31Z"}
-     , end_time   => #{ type => "string", example => "2021-04-10T18:24:31Z"}
+    #{ <<"room">>       => #{ type => "string", example => "C01"}
+     , <<"start_time">> => #{ type => "string", example => "2021-04-10T18:24:31Z"}
+     , <<"end_time">>   => #{ type => "string", example => "2021-04-10T18:24:31Z"}
      }
   ),
   ok = cowboy_swagger:add_definition(<<"post_bookings_response">>,
-    #{ booking_id => #{ type => "string", required => "false", example => "bf6a5633-e503-47a6-babe-de3b2c464b86"}
-     , room       => #{ type => "string", required => "false", example => "C01"}
-     , start_time => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
-     , end_time   => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
-     , created    => #{ type => "boolean", required => "true"}
-     , signature  => #{ type => "string", required => "false"
-                      , example => "MEYCIQDQ8WNIH2wkiArOz75/Y3YE1hmIDejQQhymHcDICf4o+wIhALEMQJ4/v/qwhDuW2kfgkFLLabncw5jZjGJ/W7LC7PkR"
-                      , description => "A valid ECDSA signature (ecdsa-with-SHA256 1.2.840.10045.4.3.2) of the concatenated values of the room, start_time, end_time, and id keys. Base64 encoded as a string."
-                      }
+    #{ <<"booking_id">> => #{ type => "string", required => "false", example => "bf6a5633-e503-47a6-babe-de3b2c464b86"}
+     , <<"room">>       => #{ type => "string", required => "false", example => "C01"}
+     , <<"start_time">> => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
+     , <<"end_time">>   => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
+     , <<"created">>    => #{ type => "boolean", required => "true"}
+     , <<"signature">>  => #{ type => "string", required => "false"
+                            , example => "MEYCIQDQ8WNIH2wkiArOz75/Y3YE1hmIDejQQhymHcDICf4o+wIhALEMQJ4/v/qwhDuW2kfgkFLLabncw5jZjGJ/W7LC7PkR"
+                            , description => "A valid ECDSA signature (ecdsa-with-SHA256 1.2.840.10045.4.3.2) of the concatenated values of the room, start_time, end_time, and id keys. Base64 encoded as a string."
+                            }
      }
   ),
   Metadata = #{ post => swagger_doc_post()

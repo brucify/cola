@@ -27,7 +27,7 @@ stop() ->
   cowboy:stop_listener(?HTTP_LISTENER).
 
 routes() ->
-  {ok, Routes} = file:consult(filename:join(code:priv_dir("cola"),"routes.src")),
+  {ok, Routes} = file:consult(filename:join(code:priv_dir(cola),"routes.src")),
   Routes.
 
 %%%===================================================================
@@ -41,10 +41,10 @@ https_port() ->
   end.
 
 server_certfile() ->
-  filename:join(code:priv_dir("cola"),"server.crt").
+  filename:join(code:priv_dir(cola),"server.crt").
 
 server_keyfile() ->
-  filename:join(code:priv_dir("cola"),"server.key").
+  filename:join(code:priv_dir(cola),"server.key").
 
 compile_swagger_dispatch() ->
   Trails = trails:trails([ cola_controller_bookings

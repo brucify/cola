@@ -67,5 +67,5 @@ code_change(_OldVsn, State, _Extra) ->
 
 -spec key() -> public_key:ec_private_key().
 key() ->
-  {ok, Key} = file:read_file(filename:join(code:priv_dir("cola"),"server_ec.key")),
+  {ok, Key} = file:read_file(filename:join(code:priv_dir(cola),"server_ec.key")),
   public_key:pem_entry_decode(hd(public_key:pem_decode(Key))).

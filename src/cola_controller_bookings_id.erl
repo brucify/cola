@@ -82,14 +82,14 @@ delete(Params, #state{client = Client}) ->
 
 trails() ->
   ok = cowboy_swagger:add_definition(<<"get_bookings_id_response">>,
-    #{ booking_id => #{ type => "string", required => "false", example => "bf6a5633-e503-47a6-babe-de3b2c464b86"}
-     , room       => #{ type => "string", required => "false", example => "C01"}
-     , start_time => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
-     , end_time   => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
+    #{ <<"booking_id">> => #{ type => "string", required => "false", example => "bf6a5633-e503-47a6-babe-de3b2c464b86"}
+     , <<"room">>       => #{ type => "string", required => "false", example => "C01"}
+     , <<"start_time">> => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
+     , <<"end_time">>   => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
      }
   ),
   ok = cowboy_swagger:add_definition(<<"delete_bookings_id_response">>,
-    #{ result     => #{ type => "boolean", required => "true" }
+    #{ <<"result">>     => #{ type => "boolean", required => "true" }
      }
   ),
   Metadata = #{ get => swagger_doc_get()
