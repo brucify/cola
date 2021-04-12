@@ -13,6 +13,7 @@
         , insert_new/4
         , is_free/4
         , delete_booking/2
+        , delete_all/0
         , format_booking/1
         , lookup_booking/2
         , to_rfc3339/1
@@ -68,8 +69,10 @@
 
 init() ->
   ets:new(?MODULE, [named_table, ordered_set, public]),
-  init_rooms(),
   ok.
+
+delete_all() ->
+  ets:delete_all_objects(?MODULE).
 
 -spec insert_new(Room, StartTime, EndTime, Client) -> Result
   when Room      :: string(),
@@ -79,7 +82,7 @@ init() ->
        Result    :: {true, Id::string()} | false.
 insert_new(Room, StartTime0, EndTime0, Client) ->
   case (is_allowed(Room, Client) orelse is_public_mode())
-    andalso ets:member(?MODULE, Room) of
+    andalso lists:keymember(Room, 1, ?OWNERSHIP) of
     false -> false;
     true ->
       Id = cola_uuid:new(),
@@ -99,7 +102,7 @@ insert_new(Room, StartTime0, EndTime0, Client) ->
        Result    :: boolean().
 is_free(Room, StartTime, EndTime, Client) ->
   case (is_allowed(Room, Client) orelse is_public_mode())
-    andalso ets:member(?MODULE, Room) of
+    andalso lists:keymember(Room, 1, ?OWNERSHIP) of
     false -> false;
     true ->
       Bookings = lists:keysort(3, lookup_by_room(Room)), % sort by start_time
@@ -165,28 +168,6 @@ all_rooms(Client) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-
-init_rooms() ->
-  ets:insert_new(?MODULE, {"C01", []}),
-  ets:insert_new(?MODULE, {"C02", []}),
-  ets:insert_new(?MODULE, {"C03", []}),
-  ets:insert_new(?MODULE, {"C04", []}),
-  ets:insert_new(?MODULE, {"C05", []}),
-  ets:insert_new(?MODULE, {"C06", []}),
-  ets:insert_new(?MODULE, {"C07", []}),
-  ets:insert_new(?MODULE, {"C08", []}),
-  ets:insert_new(?MODULE, {"C09", []}),
-  ets:insert_new(?MODULE, {"C10", []}),
-  ets:insert_new(?MODULE, {"P01", []}),
-  ets:insert_new(?MODULE, {"P02", []}),
-  ets:insert_new(?MODULE, {"P03", []}),
-  ets:insert_new(?MODULE, {"P04", []}),
-  ets:insert_new(?MODULE, {"P05", []}),
-  ets:insert_new(?MODULE, {"P06", []}),
-  ets:insert_new(?MODULE, {"P07", []}),
-  ets:insert_new(?MODULE, {"P08", []}),
-  ets:insert_new(?MODULE, {"P09", []}),
-  ets:insert_new(?MODULE, {"P10", []}).
 
 -spec lookup(Id) -> Booking
   when Id       :: string(),

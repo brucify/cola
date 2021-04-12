@@ -10,7 +10,53 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-check_is_free_test() ->
+-define(TEST(Fun), {??Fun, Fun}).
+
+cola_bookings_test_() ->
+  {"Tests for cola_bookings",
+    { setup
+    , fun setup_per_suite/0
+    , fun cleanup_per_suite/1
+    , { foreach
+      , fun setup/0
+      , fun cleanup/1
+      , [ ?TEST(fun test_check_is_free/0)
+        , ?TEST(fun test_insert_new_private_mode/0)
+        , ?TEST(fun test_insert_new_public_mode/0)
+        ]
+      }
+    }
+  }.
+
+setup_per_suite() ->
+  cola_sup:start_link(),
+  cola_bookings:init().
+
+cleanup_per_suite(_) ->
+  ok.
+
+setup() ->
+  ok.
+
+cleanup(_) ->
+  cola_permission_worker:reset(),
+  cola_bookings:delete_all().
+
+test_insert_new_private_mode() ->
+  ok = cola_permission_worker:private_mode(),
+  ?assertMatch({true, _}, cola_bookings:insert_new("C01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", coke)),
+  ?assertEqual(false,     cola_bookings:insert_new("C01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", pepsi)),
+  ?assertMatch({true, _}, cola_bookings:insert_new("P01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", pepsi)),
+  ?assertEqual(false,     cola_bookings:insert_new("P01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", coke)).
+
+test_insert_new_public_mode() ->
+  ok = cola_permission_worker:public_mode(),
+  ?assertMatch({true, _}, cola_bookings:insert_new("C01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", coke)),
+  ?assertMatch({true, _}, cola_bookings:insert_new("C01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", pepsi)),
+  ?assertMatch({true, _}, cola_bookings:insert_new("P01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", pepsi)),
+  ?assertMatch({true, _}, cola_bookings:insert_new("P01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", coke)).
+
+test_check_is_free() ->
   Bookings = [ {cola_uuid:new(), "C01", 1618078958, 1618082558, coke} % "2021-04-10T18:22:38Z" -> "2021-04-10T19:22:38Z"
              , {cola_uuid:new(), "C01", 1618089758, 1618093358, coke} % "2021-04-10T21:22:38Z" -> "2021-04-10T22:22:38Z"
              , {cola_uuid:new(), "C01", 1618093838, 1618094438, coke} % "2021-04-10T22:30:38Z" -> "2021-04-10T22:40:38Z"
