@@ -13,6 +13,7 @@
         , insert_new/4
         , is_free/4
         , delete_booking/2
+        , format_booking/1
         , lookup_booking/2
         , to_rfc3339/1
         , all_bookings/1
@@ -125,6 +126,22 @@ delete_booking(Id, Client) ->
     {Id,_,_,_,Client} -> ets:delete(?MODULE, Id);
     _                 -> true
   end.
+
+-spec format_booking(Booking) -> Result
+  when Booking      :: string(),
+       Result       :: map().
+format_booking({Id0, Room0, StartTime0, EndTime0, _}) ->
+  Room      = cola_conversion:to_binary(Room0),
+  StartTime = cola_conversion:to_binary(StartTime0),
+  EndTime   = cola_conversion:to_binary(EndTime0),
+  Id        = cola_conversion:to_binary(Id0),
+  Sig = cola_crypto_worker:sign(<<Room/binary, StartTime/binary, EndTime/binary, Id/binary>>),
+  #{ room             => Room
+   , start_time       => StartTime
+   , end_time         => EndTime
+   , booking_id       => Id
+   , signature        => base64:encode(Sig)
+   }.
 
 -spec all_bookings(Room) -> Result
   when Room   :: string(),

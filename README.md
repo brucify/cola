@@ -1,8 +1,6 @@
 cola
 =====
 
-Co-located Organization Logistics API (COLA)
-
 An Erlang application based on cowboy http server
 
 Build
@@ -35,6 +33,64 @@ Switching between public and private mode:
     ok
     4> cola_permission_worker:current_mode().
     private
+
+Usage
+-----
+
+```bash
+$ HOST=https://localhost:8443 ./get_rooms_coke | jq
+< HTTP/2 200
+[
+  {
+    "occupied": [
+      {
+        "start_time": "2021-04-10T17:24:31Z",
+        "end_time": "2021-04-10T18:24:31Z"
+      }
+    ],
+    "name": "C01"
+  },
+  {
+    "occupied": [],
+    "name": "C02"
+  },
+  {
+    "occupied": [],
+    "name": "C03"
+  },
+  ...
+]
+
+$ HOST=https://localhost:8443 ./post_bookings_coke | jq
+< HTTP/2 200
+{
+  "start_time": "2021-04-10T17:24:31Z",
+  "signature": "MEUCIFUv/PiJDv1+3SugTHWu2ELO1v7Ap1BSA24QZbGBMMBxAiEAjAz0+Onn1AtuI0KFh8dNpXGoraVZSW4TINdcb1skTtk=",
+  "room": "C10",
+  "end_time": "2021-04-10T18:24:31Z",
+  "created": true,
+  "booking_id": "356c4c58-ad12-4251-abaa-c6c4829f9f34"
+}
+
+$ HOST=https://localhost:8443 ID=356c4c58-ad12-4251-abaa-c6c4829f9f34 ./get_bookings_id_coke | jq
+< HTTP/2 200
+{
+  "start_time": "2021-04-10T17:24:31Z",
+  "start_end": "2021-04-10T18:24:31Z",
+  "room": "C10",
+  "booking_id": "356c4c58-ad12-4251-abaa-c6c4829f9f34"
+}
+
+$  HOST=https://localhost:8443 ID=356c4c58-ad12-4251-abaa-c6c4829f9f34 ./get_bookings_id_pepsi | jq
+< HTTP/2 404
+        
+$ HOST=https://localhost:8443 ID=356c4c58-ad12-4251-abaa-c6c4829f9f34 ./delete_bookings_id_coke | jq
+< HTTP/2 200
+{
+  "result": true
+}
+
+```
 
 Running eunit tests 
 -----

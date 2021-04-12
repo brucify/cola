@@ -42,20 +42,10 @@ post(Params, #state{client = Client}) ->
                 end,
       Result = case Created of
                  {true, Id0} ->
-                   Room      = cola_conversion:to_binary(Room0),
-                   StartTime = cola_conversion:to_binary(StartTime0),
-                   EndTime   = cola_conversion:to_binary(EndTime0),
-                   Id        = cola_conversion:to_binary(Id0),
-                   Sig = cola_crypto_worker:sign(<<Room/binary, StartTime/binary, EndTime/binary, Id/binary>>),
-                   #{ created          => true
-                    , room             => Room
-                    , start_time       => StartTime
-                    , end_time         => EndTime
-                    , booking_id       => Id
-                    , signature        => base64:encode(Sig)
-                    };
+                   Booking = cola_bookings:format_booking({Id0, Room0, StartTime0, EndTime0, Client}),
+                   Booking#{ created => true};
                  false      ->
-                   #{ created          => false }
+                   #{ created => false }
                end,
       {continue, Result}
   end.
