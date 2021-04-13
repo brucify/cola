@@ -1,0 +1,13 @@
+curl --request POST \
+     --url     $HOST/merkle \
+     --cert    coke.crt \
+     --key     coke.key \
+     --header  'Content-Type: application/json' \
+     --verbose \
+     --insecure \
+     -d @- \
+<< EOF
+{
+ "room": "C01"
+}
+EOF

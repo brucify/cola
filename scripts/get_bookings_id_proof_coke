@@ -1,0 +1,7 @@
+curl --request GET \
+     --url     $HOST/bookings/$ID/proof \
+     --cert    coke.crt \
+     --key     coke.key \
+     --header  'Content-Type: application/json' \
+     --verbose \
+     --insecure

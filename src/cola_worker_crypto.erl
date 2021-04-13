@@ -93,21 +93,11 @@ handle_call({merkle, Room}, _From, #crypto_worker_state{merkle_trees = List}=Sta
   Merkle = proplists:get_value(Room, List),
   {reply, {ok, Merkle}, State};
 handle_call({gen_proof, Id, Client}, _From, #crypto_worker_state{merkle_trees = List}=State) ->
-  io:format(user, "Getting root hash for: ~p~n", [Id]),
-  Result = case cola_bookings:lookup_booking(Id, Client) of
-             undefined -> not_found;
-             {_,Room,_,_,_}=Booking ->
-               Merkle = proplists:get_value(Room, List),
-               Proof = merkerl:gen_proof(merkerl:hash_value(Booking), Merkle),
-               io:format(user, "Proof: ~p~n", [Proof]),
-               base64:encode(term_to_binary(Proof))
-           end,
+  Result = do_gen_proof(Id, Client, List),
   {reply, {ok, Result}, State};
-handle_call({verify_proof, Hash0, Proof0, Room}, _From, #crypto_worker_state{merkle_trees = List}=State) ->
+handle_call({verify_proof, Hash, Proof, Room}, _From, #crypto_worker_state{merkle_trees = List}=State) ->
   Merkle = proplists:get_value(Room, List),
-  Proof1 = binary_to_term(base64:decode(Proof0)),
-  Hash1  = base64:decode(Hash0),
-  Result = merkerl:verify_proof(Hash1, Merkle, Proof1),
+  Result = do_verify_proof( Hash, Merkle, Proof),
   {reply, {ok, Result}, State};
 handle_call({root_hash, Room}, _From, #crypto_worker_state{merkle_trees = List}=State) ->
   io:format(user, "Getting root hash for: ~p~n", [Room]),
@@ -119,6 +109,7 @@ handle_call({root_hash, Room}, _From, #crypto_worker_state{merkle_trees = List}=
   {reply, {ok, Hash}, State};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
+
 
 handle_cast({recalc_merkle, Room}, #crypto_worker_state{merkle_trees = List0}=State) ->
   io:format(user, "Recalculating merkle tree: ~p~n", [Room]),
@@ -150,3 +141,19 @@ code_change(_OldVsn, State, _Extra) ->
 key() ->
   {ok, Key} = file:read_file(filename:join(code:priv_dir(cola),"server_ec.key")),
   public_key:pem_entry_decode(hd(public_key:pem_decode(Key))).
+
+do_gen_proof(Id, Client, List) ->
+  io:format(user, "Getting root hash for: ~p~n", [Id]),
+  case cola_bookings:lookup_booking(Id, Client) of
+    undefined -> not_found;
+    {_, Room, _, _, _} = Booking ->
+      Merkle = proplists:get_value(Room, List),
+      Proof  = merkerl:gen_proof(merkerl:hash_value(Booking), Merkle),
+      io:format(user, "Proof: ~p~n", [Proof]),
+      base64:encode(term_to_binary(Proof))
+  end.
+
+do_verify_proof(Hash0, Merkle, Proof0) ->
+  Proof1 = binary_to_term(base64:decode(Proof0)),
+  Hash1  = base64:decode(Hash0),
+  merkerl:verify_proof(Hash1, Merkle, Proof1).

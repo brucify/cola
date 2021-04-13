@@ -46,14 +46,14 @@ get(Params, #state{client = Client}) ->
                  EndTime   = cola_conversion:to_binary(cola_bookings:end_time(Booking)),
                  Id        = cola_conversion:to_binary(Id0),
                  Hash      = cola_bookings:hash_value(Booking),
-                 Data = <<Room/binary, StartTime/binary, EndTime/binary, Id/binary>>,
+                 Data = <<Room/binary, StartTime/binary, EndTime/binary, Id/binary, Hash/binary>>,
                  Sig  = cola_worker_crypto:sign(Data),
                  Result = #{ room             => Room
                            , start_time       => StartTime
                            , end_time         => EndTime
                            , booking_id       => Id
-                           , signature        => Sig
                            , hash_value       => Hash
+                           , signature        => Sig
                            },
                  {continue, Result}
   end.
@@ -97,7 +97,7 @@ trails() ->
      , <<"end_time">>   => #{ type => "string", required => "false", example => "2021-04-10T18:24:31Z"}
      , <<"signature">>  => #{ type => "string", required => "false"
                             , example => "MEYCIQDQ8WNIH2wkiArOz75/Y3YE1hmIDejQQhymHcDICf4o+wIhALEMQJ4/v/qwhDuW2kfgkFLLabncw5jZjGJ/W7LC7PkR"
-                            , description => "A valid ECDSA signature (ecdsa-with-SHA256 1.2.840.10045.4.3.2) of the concatenated values of the room, start_time, end_time, and id keys. Base64 encoded as a string."
+                            , description => "A valid ECDSA signature (ecdsa-with-SHA256 1.2.840.10045.4.3.2) of the concatenated values of the room, start_time, end_time id, and hash_value keys. Base64 encoded as a string."
                             }
      , <<"hash_value">>  => #{ type => "string", required => "false" }
      }

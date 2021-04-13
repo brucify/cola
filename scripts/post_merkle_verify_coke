@@ -1,0 +1,15 @@
+curl --request POST \
+     --url     $HOST/merkle/verify \
+     --cert    coke.crt \
+     --key     coke.key \
+     --header  'Content-Type: application/json' \
+     --verbose \
+     --insecure \
+     -d @- \
+<< EOF
+{
+ "room": "C01",
+ "hash": "Crku/YArhTvwybz1MI7RJWpr63uJT8iYYOmUu29CkUk=",
+ "proof": "g2wAAAABaAJkAAVyaWdodG0AAAAgGqIkxqYIql1TX08L/LL/V4CLF1EpAgu7s4QuN6FAKHNq"
+}
+EOF

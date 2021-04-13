@@ -21,17 +21,20 @@ Testing against localhost using the curl scripts in `scripts`:
 
     HOST=https://localhost:8443 ./post_bookings_coke | jq
     HOST=https://localhost:8443 ID=fa293f3f-8fca-478e-b718-159ff669d85f ./get_bookings_id_coke | jq
+    HOST=https://localhost:8443 ID=fa293f3f-8fca-478e-b718-159ff669d85f ./get_bookings_id_proof_coke | jq
+    HOST=https://localhost:8443 ./post_bookings_merkle_coke | jq
+    HOST=https://localhost:8443 ./post_bookings_merkle_verify_coke | jq
     HOST=https://localhost:8443 ID=fa293f3f-8fca-478e-b718-159ff669d85f ./delete_bookings_id_coke | jq
 
 Switching between public and private mode:
 
-    1> cola_permission_worker:public_mode().
+    1> cola_worker_permission:public_mode().
     ok
-    2> cola_permission_worker:current_mode().
+    2> cola_worker_permission:current_mode().
     public
-    3> cola_permission_worker:reset().
+    3> cola_worker_permission:reset().
     ok
-    4> cola_permission_worker:current_mode().
+    4> cola_worker_permission:current_mode().
     private
 
 Usage
@@ -65,26 +68,47 @@ $ HOST=https://localhost:8443 ./post_bookings_coke | jq
 < HTTP/2 200
 {
   "start_time": "2021-04-10T17:24:31Z",
-  "signature": "MEUCIFUv/PiJDv1+3SugTHWu2ELO1v7Ap1BSA24QZbGBMMBxAiEAjAz0+Onn1AtuI0KFh8dNpXGoraVZSW4TINdcb1skTtk=",
-  "room": "C10",
+  "signature": "MEYCIQCX3Y639yIcrOHcz2flAOzJJQJBgqGZFQGLBEpTXZFXsgIhANSm52RejFqRIl3C9RSknqiQ/VT5dKwgri7gv5myvGgF",
+  "room": "C01",
+  "hash_value": "Crku/YArhTvwybz1MI7RJWpr63uJT8iYYOmUu29CkUk=",
   "end_time": "2021-04-10T18:24:31Z",
   "created": true,
-  "booking_id": "356c4c58-ad12-4251-abaa-c6c4829f9f34"
+  "booking_id": "6570b42c-3783-4521-9c71-059aa33f57ad"
 }
 
-$ HOST=https://localhost:8443 ID=356c4c58-ad12-4251-abaa-c6c4829f9f34 ./get_bookings_id_coke | jq
+$ HOST=https://localhost:8443 ID=6570b42c-3783-4521-9c71-059aa33f57ad ./get_bookings_id_coke | jq
 < HTTP/2 200
 {
   "start_time": "2021-04-10T17:24:31Z",
-  "start_end": "2021-04-10T18:24:31Z",
-  "room": "C10",
-  "booking_id": "356c4c58-ad12-4251-abaa-c6c4829f9f34"
+  "signature": "MEYCIQCWnblvZkWRukti51uphD1+bklqAGcCyY9Pi84MTZOwGgIhAIXbLe8/FASWvk8G5DevwTWSTkYAdYREnAJI2Ma/1Evk",
+  "room": "C01",
+  "hash_value": "Crku/YArhTvwybz1MI7RJWpr63uJT8iYYOmUu29CkUk=",
+  "end_time": "2021-04-10T18:24:31Z",
+  "booking_id": "6570b42c-3783-4521-9c71-059aa33f57ad"
 }
 
-$  HOST=https://localhost:8443 ID=356c4c58-ad12-4251-abaa-c6c4829f9f34 ./get_bookings_id_pepsi | jq
+$ HOST=https://localhost:8443 ID=6570b42c-3783-4521-9c71-059aa33f57ad ./get_bookings_id_pepsi | jq
 < HTTP/2 404
         
-$ HOST=https://localhost:8443 ID=356c4c58-ad12-4251-abaa-c6c4829f9f34 ./delete_bookings_id_coke | jq
+HOST=https://localhost:8443 ./post_merkle_coke  | jq
+< HTTP/2 200 
+{
+  "root_hash": "OOs7xC8o7f+QCNL+4ZO1paCgMs7p6kY1lH4FEunmTug="
+}
+
+HOST=https://localhost:8443 ID=6570b42c-3783-4521-9c71-059aa33f57ad ./get_bookings_id_proof_coke | jq
+< HTTP/2 200
+{
+  "proof": "g2wAAAABaAJkAAVyaWdodG0AAAAgGqIkxqYIql1TX08L/LL/V4CLF1EpAgu7s4QuN6FAKHNq"
+}
+
+HOST=https://localhost:8443 ./post_merkle_verify_coke  | jq
+< HTTP/2 200
+{
+  "result": true
+}
+
+$ HOST=https://localhost:8443 ID=6570b42c-3783-4521-9c71-059aa33f57ad ./delete_bookings_id_coke | jq
 < HTTP/2 200
 {
   "result": true
