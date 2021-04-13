@@ -17,10 +17,10 @@
 swagger_doc_post() ->
   #{ tags        => ["bookings"]
    , description => "Creates a new booking"
-    , requestBody =>
-        #{ description => "Creates a new booking"
-         , content => #{ 'application/json' => #{ schema => cowboy_swagger:schema(<<"post_bookings_request">>)}}
-         }
+   , requestBody =>
+      #{ description => "Creates a new booking"
+       , content => #{ 'application/json' => #{ schema => cowboy_swagger:schema(<<"post_bookings_request">>)}}
+       }
    , responses =>
        #{ <<"200">> =>
             #{ description => "200 OK"
@@ -36,17 +36,27 @@ post(Params, #state{client = Client}) ->
     false ->
       {400, <<"Bad request">>, #{}};
     true ->
-      Created = case cola_bookings:is_free(Room0, StartTime0, EndTime0, Client) of
-                  true  -> cola_bookings:insert_new(Room0, StartTime0, EndTime0, Client);
-                  false -> false
-                end,
-      Result = case Created of
-                 {true, Id0} ->
-                   Booking = cola_bookings:format_booking({Id0, Room0, StartTime0, EndTime0, Client}),
-                   Booking#{ created => true};
-                 false      ->
-                   #{ created => false }
-               end,
+      Result =
+        case cola_bookings:maybe_insert_new(Room0, StartTime0, EndTime0, Client) of
+          false ->
+            #{ created => false };
+          {true, Booking} ->
+            Id0       = cola_bookings:booking_id(Booking),
+            Id        = cola_conversion:to_binary(Id0),
+            StartTime = cola_conversion:to_binary(StartTime0),
+            EndTime   = cola_conversion:to_binary(EndTime0),
+            Room      = cola_conversion:to_binary(Room0),
+            Data = <<Room/binary, StartTime/binary, EndTime/binary, Id/binary>>,
+            Sig = cola_worker_crypto:sign(Data),
+            #{ created          => true
+             , room             => Room
+             , start_time       => StartTime
+             , end_time         => EndTime
+             , booking_id       => Id
+             , signature        => Sig
+             , hash_value       => cola_bookings:hash_value(Booking)
+             }
+        end,
       {continue, Result}
   end.
 
@@ -81,6 +91,7 @@ trails() ->
                             , example => "MEYCIQDQ8WNIH2wkiArOz75/Y3YE1hmIDejQQhymHcDICf4o+wIhALEMQJ4/v/qwhDuW2kfgkFLLabncw5jZjGJ/W7LC7PkR"
                             , description => "A valid ECDSA signature (ecdsa-with-SHA256 1.2.840.10045.4.3.2) of the concatenated values of the room, start_time, end_time, and id keys. Base64 encoded as a string."
                             }
+     , <<"hash_value">> => #{ type => "string", required => "false", example => "41wLXtIvtVSeJxGkfr0kGeDeruPh1Vi0WBOtNP4LT9k="}
      }
   ),
   Metadata = #{ post => swagger_doc_post()

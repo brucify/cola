@@ -1,4 +1,7 @@
-{"/ping",           cola_ping_handler,    []}.
-{"/bookings",       cola_default_handler, [cola_controller_bookings,    ['POST']]}.
-{"/bookings/:id",   cola_default_handler, [cola_controller_bookings_id, ['GET', 'DELETE']]}.
-{"/rooms",          cola_default_handler, [cola_controller_rooms,       ['GET']]}.
+{"/ping",                   cola_ping_handler,    []}.
+{"/bookings",               cola_default_handler, [cola_controller_bookings,            ['POST']]}.
+{"/bookings/:id",           cola_default_handler, [cola_controller_bookings_id,         ['GET', 'DELETE']]}.
+{"/bookings/:id/proof",     cola_default_handler, [cola_controller_bookings_id_proof,   ['GET']]}.
+{"/rooms",                  cola_default_handler, [cola_controller_rooms,               ['GET']]}.
+{"/merkle",                 cola_default_handler, [cola_controller_merkle,              ['POST']]}.
+{"/merkle/verify",          cola_default_handler, [cola_controller_merkle_verify,       ['POST']]}.

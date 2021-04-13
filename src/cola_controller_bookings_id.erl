@@ -38,10 +38,23 @@ swagger_doc_get() ->
        }
    }.
 get(Params, #state{client = Client}) ->
-  Id = cola_conversion:to_list(proplists:get_value(id, Params)),
-  case cola_bookings:lookup_booking(Id, Client) of
+  Id0 = cola_conversion:to_list(proplists:get_value(id, Params)),
+  case cola_bookings:lookup_booking(Id0, Client) of
     undefined -> {404, <<>>, #{}};
-    Booking   -> Result = cola_bookings:format_booking(Booking),
+    Booking   -> Room      = cola_conversion:to_binary(cola_bookings:room(Booking)),
+                 StartTime = cola_conversion:to_binary(cola_bookings:start_time(Booking)),
+                 EndTime   = cola_conversion:to_binary(cola_bookings:end_time(Booking)),
+                 Id        = cola_conversion:to_binary(Id0),
+                 Hash      = cola_bookings:hash_value(Booking),
+                 Data = <<Room/binary, StartTime/binary, EndTime/binary, Id/binary>>,
+                 Sig  = cola_worker_crypto:sign(Data),
+                 Result = #{ room             => Room
+                           , start_time       => StartTime
+                           , end_time         => EndTime
+                           , booking_id       => Id
+                           , signature        => Sig
+                           , hash_value       => Hash
+                           },
                  {continue, Result}
   end.
 
@@ -86,6 +99,7 @@ trails() ->
                             , example => "MEYCIQDQ8WNIH2wkiArOz75/Y3YE1hmIDejQQhymHcDICf4o+wIhALEMQJ4/v/qwhDuW2kfgkFLLabncw5jZjGJ/W7LC7PkR"
                             , description => "A valid ECDSA signature (ecdsa-with-SHA256 1.2.840.10045.4.3.2) of the concatenated values of the room, start_time, end_time, and id keys. Base64 encoded as a string."
                             }
+     , <<"hash_value">>  => #{ type => "string", required => "false" }
      }
   ),
   ok = cowboy_swagger:add_definition(<<"delete_bookings_id_response">>,

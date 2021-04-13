@@ -1,0 +1,15 @@
+curl --request POST \
+     --url     $HOST/bookings \
+     --cert    self_signed.crt \
+     --key     self_signed.key \
+     --header  'Content-Type: application/json' \
+     --verbose \
+     --insecure \
+     -d @- \
+<< EOF
+{
+ "room": "C01",
+ "start_time": "2021-04-10T17:24:31Z",
+ "end_time":   "2021-04-10T18:24:31Z"
+}
+EOF

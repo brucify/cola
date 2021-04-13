@@ -49,7 +49,10 @@ server_keyfile() ->
 compile_swagger_dispatch() ->
   Trails = trails:trails([ cola_controller_bookings
                          , cola_controller_bookings_id
+                         , cola_controller_bookings_id_proof
                          , cola_controller_rooms
+                         , cola_controller_merkle
+                         , cola_controller_merkle_verify
                          , cowboy_swagger_handler
                          ]),
   trails:store(Trails),

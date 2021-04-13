@@ -39,18 +39,18 @@ setup() ->
   ok.
 
 cleanup(_) ->
-  cola_permission_worker:reset(),
+  cola_worker_permission:reset(),
   cola_bookings:delete_all().
 
 test_insert_new_private_mode() ->
-  ok = cola_permission_worker:private_mode(),
+  ok = cola_worker_permission:private_mode(),
   ?assertMatch({true, _}, cola_bookings:insert_new("C01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", coke)),
   ?assertEqual(false,     cola_bookings:insert_new("C01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", pepsi)),
   ?assertMatch({true, _}, cola_bookings:insert_new("P01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", pepsi)),
   ?assertEqual(false,     cola_bookings:insert_new("P01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", coke)).
 
 test_insert_new_public_mode() ->
-  ok = cola_permission_worker:public_mode(),
+  ok = cola_worker_permission:public_mode(),
   ?assertMatch({true, _}, cola_bookings:insert_new("C01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", coke)),
   ?assertMatch({true, _}, cola_bookings:insert_new("C01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", pepsi)),
   ?assertMatch({true, _}, cola_bookings:insert_new("P01", "2021-04-09T08:40:38Z", "2021-04-09T09:40:38Z", pepsi)),

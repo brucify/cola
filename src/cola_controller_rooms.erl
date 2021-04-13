@@ -28,7 +28,7 @@ get(_Params, #state{client=Client}) ->
   Rooms = cola_bookings:all_rooms(Client),
   Result = lists:map(
     fun(Room) ->
-      Bookings = cola_bookings:all_bookings(Room),
+      Bookings = cola_bookings:lookup_by_room(Room),
       Occupied = [ #{ start_time => cola_conversion:to_binary(StartTime)
                     , end_time   => cola_conversion:to_binary(EndTime)
                     }

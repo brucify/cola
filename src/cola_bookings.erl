@@ -14,11 +14,18 @@
         , is_free/4
         , delete_booking/2
         , delete_all/0
-        , format_booking/1
         , lookup_booking/2
+        , lookup_by_room/1
+        , maybe_insert_new/4
         , to_rfc3339/1
-        , all_bookings/1
         , all_rooms/1
+        ]).
+
+-export([ room/1
+        , start_time/1
+        , end_time/1
+        , booking_id/1
+        , hash_value/1
         ]).
 
 -ifdef(TEST).
@@ -74,6 +81,22 @@ init() ->
 delete_all() ->
   ets:delete_all_objects(?MODULE).
 
+-spec maybe_insert_new(Room, StartTime, EndTime, Client) -> Result
+  when Room      :: string(),
+       StartTime :: string(),
+       EndTime   :: string(),
+       Client    :: client(),
+       Result    :: {true, booking()} | false.
+maybe_insert_new(Room0, StartTime0, EndTime0, Client) ->
+  case is_free(Room0, StartTime0, EndTime0, Client) of
+    false -> false;
+    true ->
+      case insert_new(Room0, StartTime0, EndTime0, Client) of
+        false      -> false;
+        {true, Id} -> {true, lookup(Id)}
+      end
+  end.
+
 -spec insert_new(Room, StartTime, EndTime, Client) -> Result
   when Room      :: string(),
        StartTime :: string(),
@@ -89,8 +112,9 @@ insert_new(Room, StartTime0, EndTime0, Client) ->
       StartTime1 = calendar:rfc3339_to_system_time(StartTime0),
       EndTime1   = calendar:rfc3339_to_system_time(EndTime0),
       case ets:insert_new(?MODULE, {Id, Room, StartTime1, EndTime1, Client}) of
-        true  -> {true, Id};
-        false -> false
+        false -> false;
+        true  -> cola_worker_crypto:recalc_merkle(Room),
+                 {true, Id}
       end
   end.
 
@@ -116,7 +140,7 @@ is_free(Room, StartTime, EndTime, Client) ->
 lookup_booking(Id, Client) ->
   case lookup(Id) of
     undefined                  -> undefined;
-    {Id,Room,Start,End,Client} -> {Id, Room, to_rfc3339(Start), to_rfc3339(End), Client};
+    {Id,_,_,_,Client}=Booking  -> Booking;
     _                          -> undefined
   end.
 
@@ -130,40 +154,31 @@ delete_booking(Id, Client) ->
     _                 -> true
   end.
 
--spec format_booking(Booking) -> Result
-  when Booking      :: string(),
-       Result       :: map().
-format_booking({Id0, Room0, StartTime0, EndTime0, _}) ->
-  Room      = cola_conversion:to_binary(Room0),
-  StartTime = cola_conversion:to_binary(StartTime0),
-  EndTime   = cola_conversion:to_binary(EndTime0),
-  Id        = cola_conversion:to_binary(Id0),
-  Sig = cola_worker_crypto:sign(<<Room/binary, StartTime/binary, EndTime/binary, Id/binary>>),
-  #{ room             => Room
-   , start_time       => StartTime
-   , end_time         => EndTime
-   , booking_id       => Id
-   , signature        => base64:encode(Sig)
-   }.
-
--spec all_bookings(Room) -> Result
-  when Room   :: string(),
-       Result :: [booking()].
-all_bookings(Room) ->
-  [ { BookingId
-    , Room
-    , to_rfc3339(Start)
-    , to_rfc3339(End)
-    , Client
-    }
-    || {BookingId, _, Start, End, Client} <- lookup_by_room(Room)
-  ].
-
 -spec all_rooms(Owner) -> Result
   when Owner  :: client(),
        Result :: [string()].
 all_rooms(Client) ->
   [Room || {Room, Owner} <- ?OWNERSHIP, Owner =:= Client orelse is_public_mode()].
+
+-spec room(booking()) -> string().
+room({_Id, Room, _StartTime, _EndTime, _Client}=Booking) ->
+  Room.
+
+-spec start_time(booking()) -> string().
+start_time({_Id, _Room, StartTime, _EndTime, _Client}=Booking) ->
+  StartTime.
+
+-spec end_time(booking()) -> string().
+end_time({_Id, _Room, _StartTime, EndTime, _Client}=Booking) ->
+  EndTime.
+
+-spec booking_id(booking()) -> string().
+booking_id({Id, _Room, _StartTime, _EndTime, _Client}=Booking) ->
+  Id.
+
+-spec hash_value(booking()) -> binary().
+hash_value(Booking) ->
+  base64:encode(merkerl:hash_value(Booking)).
 
 %%%===================================================================
 %%% Internal functions
@@ -171,20 +186,20 @@ all_rooms(Client) ->
 
 -spec lookup(Id) -> Booking
   when Id       :: string(),
-       Booking  :: booking_db_entry() | undefined.
+       Booking  :: booking() | undefined.
 lookup(Id) ->
   case ets:lookup(?MODULE, Id) of
-    []                    -> undefined;
-    [{_,_,_,_,_}=Booking] -> Booking
+    []            -> undefined;
+    [{I,R,S,E,C}] -> {I,R,to_rfc3339(S), to_rfc3339(E),C}
   end.
 
 -spec lookup_by_room(Room) -> Bookings
   when Room     :: string(),
-       Bookings :: [booking_db_entry()].
+       Bookings :: [booking()].
 lookup_by_room(Room) ->
   case ets:match_object(?MODULE, {'_', Room, '_', '_', '_'}) of
     []       -> [];
-    Bookings -> Bookings
+    Bookings -> [{I,R,to_rfc3339(S), to_rfc3339(E),C} || {I,R,S,E,C} <- Bookings]
   end.
 
 -spec check_is_free({StartTime, EndTime}, Bookings) -> Result
