@@ -4,7 +4,7 @@
 %%% @doc
 %%% @end
 %%%-------------------------------------------------------------------
--module(cola_crypto_worker).
+-module(cola_worker_crypto).
 
 -behaviour(gen_server).
 

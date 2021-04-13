@@ -138,7 +138,7 @@ format_booking({Id0, Room0, StartTime0, EndTime0, _}) ->
   StartTime = cola_conversion:to_binary(StartTime0),
   EndTime   = cola_conversion:to_binary(EndTime0),
   Id        = cola_conversion:to_binary(Id0),
-  Sig = cola_crypto_worker:sign(<<Room/binary, StartTime/binary, EndTime/binary, Id/binary>>),
+  Sig = cola_worker_crypto:sign(<<Room/binary, StartTime/binary, EndTime/binary, Id/binary>>),
   #{ room             => Room
    , start_time       => StartTime
    , end_time         => EndTime
@@ -225,7 +225,7 @@ is_allowed(Room, Client) ->
 
 -spec is_public_mode() -> boolean().
 is_public_mode() ->
-  public =:= cola_permission_worker:current_mode().
+  public =:= cola_worker_permission:current_mode().
 
 %% to "2021-04-10T21:15:31Z"
 to_rfc3339(Time) when is_integer(Time) ->

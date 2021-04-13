@@ -4,7 +4,7 @@
 %%% @doc
 %%% @end
 %%%-------------------------------------------------------------------
--module(cola_permission_worker).
+-module(cola_worker_permission).
 
 -behaviour(gen_server).
 
@@ -23,7 +23,7 @@
         , code_change/3
         ]).
 
--record(permission_server_state, { mode = private :: atom() }).
+-record(permission_worker_state, { mode = private :: atom() }).
 
 -type mode() :: public | private.
 
@@ -56,18 +56,18 @@ private_mode() ->
 %%%===================================================================
 
 init([]) ->
-  {ok, #permission_server_state{}}.
+  {ok, #permission_worker_state{}}.
 
-handle_call(current_mode, _From, #permission_server_state{mode = Mode}=State) ->
+handle_call(current_mode, _From, #permission_worker_state{mode = Mode}=State) ->
   {reply, {ok, Mode}, State};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
 handle_cast(public,  State) ->
-  {noreply, State#permission_server_state{mode = public}};
+  {noreply, State#permission_worker_state{mode = public}};
 handle_cast(private, State) ->
-  {noreply, State#permission_server_state{mode = private}};
-handle_cast(_Request, State = #permission_server_state{}) ->
+  {noreply, State#permission_worker_state{mode = private}};
+handle_cast(_Request, State = #permission_worker_state{}) ->
   {noreply, State}.
 
 handle_info(_Info, State) ->

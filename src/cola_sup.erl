@@ -16,19 +16,19 @@ start_link() ->
   supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-  Worker1  = #{ id        => cola_permission_worker
-              , start     => {cola_permission_worker, start_link, []}
+  Worker1  = #{ id        => cola_worker_permission
+              , start     => {cola_worker_permission, start_link, []}
               , restart   => permanent
               , shutdown  => 2000
               , type      => worker
-              , modules   => [cola_permission_worker]
+              , modules   => [cola_worker_permission]
               },
-  Worker2 =  #{ id        => cola_crypto_worker
-              , start     => {cola_crypto_worker, start_link, []}
+  Worker2 =  #{ id        => cola_worker_crypto
+              , start     => {cola_worker_crypto, start_link, []}
               , restart   => permanent
               , shutdown  => 2000
               , type      => worker
-              , modules   => [cola_crypto_worker]
+              , modules   => [cola_worker_crypto]
               },
   {ok, { #{ strategy    => one_for_one
           , intensity   => 5
