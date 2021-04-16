@@ -35,9 +35,9 @@ routes() ->
 %%%===================================================================
 
 https_port() ->
-  case application:get_env(https_port) of
-    {ok, Value} -> Value;
-    undefined   -> 8443
+  case cola_config:get_env(https_port) of
+    Port when is_integer(Port) -> Port;
+    undefined                  -> 8443
   end.
 
 server_certfile() ->

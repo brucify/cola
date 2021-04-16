@@ -161,19 +161,19 @@ all_rooms(Client) ->
   [Room || {Room, Owner} <- ?OWNERSHIP, Owner =:= Client orelse is_public_mode()].
 
 -spec room(booking()) -> string().
-room({_Id, Room, _StartTime, _EndTime, _Client}=Booking) ->
+room({_Id, Room, _StartTime, _EndTime, _Client}) ->
   Room.
 
 -spec start_time(booking()) -> string().
-start_time({_Id, _Room, StartTime, _EndTime, _Client}=Booking) ->
+start_time({_Id, _Room, StartTime, _EndTime, _Client}) ->
   StartTime.
 
 -spec end_time(booking()) -> string().
-end_time({_Id, _Room, _StartTime, EndTime, _Client}=Booking) ->
+end_time({_Id, _Room, _StartTime, EndTime, _Client}) ->
   EndTime.
 
 -spec booking_id(booking()) -> string().
-booking_id({Id, _Room, _StartTime, _EndTime, _Client}=Booking) ->
+booking_id({Id, _Room, _StartTime, _EndTime, _Client}) ->
   Id.
 
 -spec hash_value(booking()) -> binary().
