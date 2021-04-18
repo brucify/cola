@@ -1,0 +1,13 @@
+GET /bookings/{{<booking_id}}
+> Accept: application/json
+> User-Agent: KATT
+< 200
+< Content-Type: application/json
+{
+  "start_time": "2021-04-10T17:24:31Z",
+  "signature": "{{>signature}}",
+  "room": "C02",
+  "hash_value": "{{>hash_value}}",
+  "end_time": "2021-04-10T18:24:31Z",
+  "booking_id": "{{>booking_id}}"
+}
