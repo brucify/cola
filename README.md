@@ -13,6 +13,19 @@ Running
 
     $ rebar3 shell
 
+
+Running eunit tests
+-----
+
+    $ rebar3 eunit
+
+
+Running integration tests
+-----
+
+    $ rebar3 ct
+
+
 The app will be running at https://localhost:8443 as configured in `config/dev/sys.config`. 
 
 The Swagger UI will be served at https://localhost:8443/api-docs/. 
@@ -115,11 +128,6 @@ $ HOST=https://localhost:8443 ID=6570b42c-3783-4521-9c71-059aa33f57ad ./delete_b
 }
 
 ```
-
-Running eunit tests 
------
-
-    $ rebar3 eunit
 
 Certificates
 -----
